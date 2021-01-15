@@ -1,5 +1,5 @@
 ---
-title: "Confirmatory Factor Analysis"
+title: "Descriptive Statistics"
 author: "Statsomat.com"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -89,6 +89,9 @@ suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(PerformanceAnalytics))
 suppressPackageStartupMessages(library(gridExtra))
 suppressPackageStartupMessages(library(car))
+
+# Save default graphical parameter settings
+pardefault <- par() 
 ```
 
 ```{r, results="asis", eval=eval_code, echo=FALSE}

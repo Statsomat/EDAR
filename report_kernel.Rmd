@@ -12,13 +12,13 @@ library(knitr) # kable
 
 # Get data
 df <- params$data
+df_code <- df
 
 # Initialize further chunks
 eval0 <- FALSE
 
 tryCatch({
   
-  df_code <- df
   df <- df[,params$vars1,drop=FALSE]
   df2 <- df
   
@@ -228,50 +228,54 @@ tryCatch({
 if (exists("df_num")){
   if (dim(df_num)[2] != 0L){
   
-  # Numerical variables
-  # Descriptive statistics 
+  # Continuous variables
+  ## Descriptive statistics table
+
+  ### Take over summary from psych package and add new stats 
+  stats_new <- psych::describe(df_num)
   
-  # calculate basic statistics for each variable:
-  miss <- sapply(df_num, function(col) sum(is.na(col)))
-  complete <- sapply(df_num, function(col) (1-(sum(is.na(col)) / dim(df)[1]))*100) 
-  complete <- round(complete,3)
-  miss_complete <- data.frame(miss, complete)
-  miss_complete$Variable <- rownames(miss_complete)
-  miss_complete$ntotal <- dim(df_num)[1]
-  summary_stat <- psych::describe(df_num)
-  summary_stat$vars <- NULL
+  ### Select variables to drop 
+  stats_new <- as.data.frame(stats_new)
+  stats_new <- stats_new[c(-1,-6,-10,-13)]
   
-  if (dim(df_num)[2]==1L){
-    summary_stat$Variable=colnames(df_num)
-  } else {
-    summary_stat$Variable <- rownames(summary_stat)}
+  ### Add new variables
+  stats_new$Variable <- rownames(stats_new)
+  stats_new$ntotal <- nrow(df_num)
   
-  # calculate N Unique:
-  N_Unique <- data.frame(sapply(df_num, function(col) length(unique(col))))
+  ### Missings
+  stats_new$miss <- sapply(df_num, function(col) sum(is.na(col)))
   
-  # calculate CV:
-  CV <- sapply(df_num, function(col) {
-    ifelse(any(col< 0, na.rm=TRUE ), "-", round(sd(col,na.rm=TRUE)/mean(col,na.rm=TRUE),3))}) 
+  ### Complete rate
+  stats_new$complete <- sapply(df_num, function(col) (1-(sum(is.na(col)) / nrow(df_num)))*100)
+  stats_new$complete <- round(stats_new$complete,3)
   
-  #merge statistics to one dataframe:
-  Unique_CV <- data.frame(N_Unique, CV)
-  Unique_CV$Variable <- rownames(Unique_CV) 
-  merge1 <- merge(miss_complete, Unique_CV, by="Variable")
-  merge2<- merge(merge1, summary_stat, by="Variable")
-  merge2 <- merge2[,c(1,7,2,4,3,5,8,10,13,14,12,6,9,16,17)]
-  colnames(merge2) <- c("Variable", "N Valid", "N Missing", "N Obs", "% Complete",
-                        "N Unique", "Mean", "Median", "MIN", "MAX","MAD", "CV",  "SD",
-                        "Skewness", "Kurtosis")
+  ### N Unique
+  stats_new$N_Unique <- sapply(df_num, function(col) length(unique(col)))
   
-  csize <- min(max(nchar(merge2$Variable)),25)
-  merge2$Variable <- substr(merge2$Variable,1,csize)
-   
-  knitr::kable(merge2, digits=2, row.names = FALSE, longtable=T, booktabs=T, linesep = "") %>%
+  ### CV
+  stats_new$CV <- sapply(df_num, function(col) {
+    ifelse(any(col< 0,na.rm=TRUE), "-", round(sd(col,na.rm=TRUE) / mean(col,na.rm=TRUE),3))
+    })
+  
+  ### Reorder columns 
+  stats_new <- stats_new[,c(10,11,12,1,13,14,2:9,15)]
+  
+  ### Column names 
+  colnames(stats_new) <- c("Variable", "N Obs", "N Missing", "N Valid", "% Complete", "N Unique", "Mean", "SD", "Median", "MAD", "MIN", "MAX",
+                        "Skewness", "Kurtosis", "CV")
+  
+  # Order by variable name
+  stats_new <- stats_new[order(stats_new$Variable),]
+  
+  ### Column size
+  csize <- min(max(nchar(stats_new$Variable)),25)
+  stats_new$Variable <- substr(stats_new$Variable,1,csize)
+
+  ### Output table 
+  knitr::kable(stats_new, digits=2, row.names = FALSE, longtable=T, booktabs=T, linesep = "") %>%
     kable_styling(font_size = 7,   latex_options = c("scale_down", "repeat_header")) 
   
-  }
-  }
-}, error=function(e) message(e)
+}}}, error=function(e) message(e)
 )
 ```
 

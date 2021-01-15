@@ -9,21 +9,284 @@ rows_drop <- (which(rowSums(rowsums) == dim(df)[2]))
 df <- df[-rows_drop, ,drop=FALSE]
 ```
 
-```{r, dev="cairo_pdf", eval=eval_code}
+```{r, results="asis", eval=eval_code, echo=FALSE}
 eval_num <- FALSE
 if (exists("df_num")){
   if (ncol(df_num)>0){
-    cat("colnames_continuous = c(")
-    cat(colnames(df_num))
-    cat(")")
-    eval_num <- TRUE
+     indices <- which(colnames(df_code) %in% colnames(df_num))
+     cat("\\# `Column names of selected continuous variables`")
+     cat("\\newline ")
+     cat("`colnames_continuous = ")
+     cat(paste0("c(", paste(indices, collapse=','), ")`"))
+     eval_num <- TRUE
+     eval_numcol <- (ncol(df_num)>1)
   }
 }
 ```
 
 ```{whites, eval=FALSE, echo = eval_num}
+# Data frame of the continuous variables
 df_num <- df[ ,colnames_continuous, drop=FALSE]
 ```
+
+
+```{r, results="asis", eval=eval_code, echo=FALSE}
+eval_cat <- FALSE
+if (exists("df_factor")){
+  if (ncol(df_factor)>0){
+     indices <- which(colnames(df_code) %in% colnames(df_factor))
+     cat("\\# `Column names of selected categorical variables`")
+     cat("\\newline ")
+     cat("`colnames_categorical = ")
+     cat(paste0("c(", paste(indices, collapse=','), ")`"))
+     eval_cat <- TRUE
+  }
+}
+```
+
+```{whites, eval=FALSE, echo = eval_cat}
+# Data frame of the categorical variables
+df_factor <- df[ ,colnames_categorical, drop=FALSE]
+```
+
+```{whites, eval=FALSE, echo = eval_num}
+
+# Continuous variables
+## Descriptive statistics table
+
+### Take over summary from psych package and add new stats 
+stats_new <- psych::describe(df_num)
+
+### Select variables to drop 
+stats_new <- as.data.frame(stats_new)
+stats_new <- stats_new[c(-1,-6,-10,-13)]
+
+### Add new variables
+stats_new$Variable <- rownames(stats_new)
+stats_new$ntotal <- nrow(df_num)
+
+### Missings
+stats_new$miss <- sapply(df_num, function(col) sum(is.na(col)))
+
+### Complete rate
+stats_new$complete <- sapply(df_num, function(col) (1-(sum(is.na(col)) / nrow(df_num)))*100)
+stats_new$complete <- round(stats_new$complete,3)
+
+### N Unique
+stats_new$N_Unique <- sapply(df_num, function(col) length(unique(col)))
+
+### CV
+stats_new$CV <- sapply(df_num, function(col) {
+  ifelse(any(col< 0,na.rm=TRUE), "-", round(sd(col,na.rm=TRUE) / mean(col,na.rm=TRUE),3))
+  })
+
+### Reorder columns 
+stats_new <- stats_new[,c(10,11,12,1,13,14,2:9,15)]
+
+### Column names 
+colnames(stats_new) <- c("Variable", "N Obs", "N Missing", "N Valid", "% Complete", "N Unique", "Mean", 
+                         "SD", "Median", "MAD", "MIN", "MAX", "Skewness", "Kurtosis", "CV")
+
+### Order by variable name
+stats_new <- stats_new[order(stats_new$Variable),]
+
+### Output Table 
+knitr::kable(stats_new, digits=2, row.names = FALSE) 
+```
+
+```{whites, eval=FALSE, echo = eval_num}
+# Continuous variables
+## Graphics: Histograms for each variable
+
+### Order by variable name 
+df_num_order <- df_num[,order(colnames(df_num)),drop=FALSE] 
+
+### Function to plot histogram for each variable 
+single_hist <- function(x, main = "Histogram", 
+                    ylab="Relative Frequency", xlab=NULL, freq=FALSE, bcol="#2fa42d",
+                    dcol=c("#396e9f","#396e9f"), dlty=c("dotted", "solid"), 
+                    breaks=21) {
+
+  h <-  hist(x, plot=FALSE, breaks=breaks)
+  m <- mean(x, na.rm=TRUE)
+  s <- sd(x, na.rm=TRUE)
+  d <- density(x, na.rm=TRUE)
+  
+  # Set nice x and y axis limits 
+  xlims <- pretty(c(floor(h$breaks[1]),ceiling(last(h$breaks))))
+  ymax <- max(h$density)
+  dmax <- max(d$y)
+  ymax <- max(ymax,dmax)
+  
+  # Plots 
+  plot(h, freq=freq, ylim=c(0, ymax*1.2), ylab=ylab, xlab=xlab, 
+       main=main, col=bcol,  xlim = c(min(xlims), max(xlims)))
+  lines(d, lty=dlty[1], col=dcol[1])
+  curve(dnorm(x,m,s), add=TRUE, lty=dlty[2], col=dcol[2])
+  
+}
+
+
+### Loop over variables
+for (i in 1:ncol(df_num_order)){
+  single_hist(df_num_order[,i], main = paste("Histogram of ", colnames(df_num_order[i])))
+}
+```
+
+
+```{whites, eval=FALSE, echo = eval_numcol}
+# Continuous variables
+## Graphics: Histograms for all variables
+par(mar=c(1.5,1,2,1.5), oma=c(1,1,1,1))
+k <- ceiling(dim(df_num)[2]/20)-1
+for (i in 0:k){
+  m <- 20*i+1
+  n <- min(20*(i+1),dim(df_num)[2])
+  multi.hist(df_num_order[,m:n], dcol=c("#396e9f","#396e9f"), 
+             bcol= "#2fa42d", 
+             dlty=c("dotted", "solid"), 
+             main = colnames(df_num_order[,m:n])) 
+}
+```
+
+
+```{whites, eval=FALSE, echo = eval_num}
+# Continuous variables
+## Graphics: Box-Plot for each variable
+for (i in 1:ncol(df_num_order)){
+  boxplot(df_num_order[,c(i)], col = "#2fa42d", 
+       main = paste("Boxplot of",colnames(df_num_order[i])),
+       xlab=paste(colnames(df_num_order[i])), horizontal = TRUE)
+}
+```
+
+
+```{whites, eval=FALSE, echo = eval_numcol}
+# Continuous variables
+## Graphics: Box-Plot for all variables
+
+### Box-Plot function
+boxplot_fct <- function(i){
+  boxplot(df_num_order[,c(i)], col = "#2fa42d", 
+       main = colnames(df_num_order[i]),
+       xlab=paste(colnames(df_num_order[i])),xaxt="n",
+       horizontal = TRUE)
+}
+
+# If more than 25 variables: split plots over several pages
+if(ncol(df_num_order)>25){
+ 
+ par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
+ for(i in 1:25){
+   boxplot_fct(i)
+ }
+ 
+ for(i in 26:ncol(df_num_order)){
+   if(isTRUE(round((i-1)/25)==(i-1)/25)){ 
+     par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
+   }
+   boxplot_fct(i)
+ }
+
+ } else { 
+
+  par(mfrow=c(ceiling(sqrt(length(df_num_order))),
+              ceiling(sqrt(length(df_num_order)))),
+      mar=c(1.5,1,2,1), oma= c(1,1,1,1))
+  
+  for(i in 1:ncol(df_num_order)) boxplot_fct(i)
+}
+```
+
+```{whites, eval=FALSE, echo = eval_num}
+# Continuous variables
+## Graphics: ECDF Plots for each variable
+
+### Restore graphical parameters 
+par(pardefault)
+
+for (i in 1:length(df_num_order)){
+  
+  data <- as.data.frame(df_num_order[,c(i)])
+  colnames(data) <- "variable"
+
+  # Plot ECDF
+  step_function <- ecdf(data$variable)
+  plot(step_function,
+      main=paste("ECDF Plot of", colnames(df_num_order[i])),
+      xlab=colnames(df_num_order[i]), ylab="ECDF",
+      cex=0.7, col="#2fa42d", do.points=TRUE)
+  
+  # Plot CDF of normal distribution 
+  data_mean<- mean(data$variable, na.rm=TRUE)
+  data_sd<- sd(data$variable, na.rm=TRUE)
+  curve(pnorm(x, data_mean,data_sd),
+        from=qnorm(0.0001, mean=data_mean, sd=data_sd), 
+        to=qnorm(0.9999, mean=data_mean, sd=data_sd), 
+        add=TRUE, col="#396e9f", lwd=2)
+}
+```
+
+
+
+```{whites, eval=FALSE, echo = eval_numcol}
+# Continuous variables
+## Graphics: ECDF Plots for all variables
+
+### Restore graphical parameters 
+par(pardefault)
+
+ecdf_plot <- function(i){
+
+  data <- as.data.frame(df_num_order[,c(i)])
+  colnames(data)<-"variable"
+  
+  # Plot ECDF
+  step_function <- ecdf(data$variable)
+  ecdf_plot <- plot(step_function,
+                  main = colnames(df_num_order[i]),
+                  xlab = colnames(df_num_order[i]), ylab = "ECDF",
+                  cex = 0.7, col="#2fa42d", do.points = FALSE)
+  
+  # Plot CDF of normal distribution
+  data_mean <- mean(data$variable, na.rm=TRUE)
+  data_sd <- sd(data$variable, na.rm=TRUE)
+  curve(pnorm(x, data_mean,data_sd),
+        from = qnorm(0.0001, mean = data_mean, sd = data_sd), 
+        to = qnorm(0.9999, mean = data_mean, sd = data_sd), 
+        add = TRUE, col="#396e9f", lwd=0.5,pch=1)
+}
+
+
+# If more than 25 variables: split plots over several pages
+if(length(df_num_order)>25){
+ 
+   # Set graphical parameters 
+   par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
+   
+   for(i in 1:25) ecdf_plot(i)
+   
+   for(i in 26:ncol(df_num_order)){
+     if(isTRUE(round((i-1)/25)==(i-1)/25)){ 
+       par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
+     }
+     ecdf_plot(i)
+   }
+ 
+} else {
+
+  # Set graphical parameters 
+  par(mfrow=c(ceiling(sqrt(length(df_num_order))),
+              ceiling(sqrt(length(df_num_order)))),
+      mar=c(1.5,1,2,1), oma= c(1,1,1,1))
+  
+  for(i in 1:ncol(df_num_order)) ecdf_plot(i)
+
+}
+```
+
+
+
 
 ```{r, results="asis", eval=eval_code}
 cat("\\newpage ")
