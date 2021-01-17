@@ -49,6 +49,7 @@ library(shiny)
 library(gridExtra) # for grid.arrange
 library(PerformanceAnalytics) # for chart.ECDF
 library(car) # for qqPlot
+library(kableExtra)
 
 # Initialize next computations
 eval <- FALSE
@@ -160,11 +161,12 @@ if (exists("col_names_missing")){
 }
 
 
-cat("Variables considered continuous: ", fill=TRUE)
 if (exists("df_cont")){
+  cat("Variables considered continuous: ", fill=TRUE)
   if (ncol(df_cont)>0){
     cat(ncol(df_cont),fill=TRUE)
-    knitr::kable(cols_continuous, col.names = "Variables considered continuous", linesep = '', longtable=T)
+    knitr::kable(cols_continuous, col.names = "Variables considered continuous", linesep = '', longtable=T) %>%
+      kable_styling(position = "center", full_width = FALSE, latex_options = c("HOLD_position","repeat_header"))
   } else {
     cat("0", fill=TRUE)
     cat("\\newline",fill=TRUE) 
@@ -172,11 +174,12 @@ if (exists("df_cont")){
 }
 
 
-cat("Variables considered categorical: ", fill=TRUE)
 if (exists("df_cat")){
+  cat("Variables considered categorical: ", fill=TRUE)
   if (ncol(df_cat)>0){
     cat(ncol(df_cat),fill=TRUE)
-    knitr::kable(colnames(df_cat), col.names = "Variables considered categorical", linesep = '', longtable=T) 
+    knitr::kable(colnames(df_cat), col.names = "Variables considered categorical", linesep = '', longtable=T) %>%
+      kable_styling(position = "center", full_width = FALSE, latex_options = c("HOLD_position","repeat_header"))
   } else {
     cat("0", fill=TRUE)
     cat("\\newline",fill=TRUE) 
@@ -205,10 +208,9 @@ if (length(numeric_percent[(numeric_percent>0.9)]) != 0L){
 \pagebreak
 
 ```{r, eval=eval}
-library(kableExtra)
 # Instead of updating the rest of the code:
-df_num <- df_cont
-df_factor <- df_cat
+if (exists("df_cont")) df_num <- df_cont
+if (exists("df_cat")) df_factor <- df_cat
 ```
 
 ```{r, results="asis", eval=eval}
@@ -420,9 +422,8 @@ if (exists("df_num")){
          xlab=paste(colnames(df_num_order[i])), horizontal = TRUE)
     cat("\n\n\\pagebreak\n")
   }
-  }
-} 
-}, error=function(e) message(e)
+
+}}}, error=function(e) message(e)
 )
 ```
 
@@ -447,40 +448,19 @@ if (exists("df_num")){
   # Numerical variables
   # Graphics: Box-Plots Summary
   # For each variable
-  boxplot_fct <- function(i){
-    boxplot(df_num_order[,c(i)], col = "#2fa42d", 
-         main = colnames(df_num_order[i]),
-         xlab=paste(colnames(df_num_order[i])),xaxt="n",
-         horizontal = TRUE)
-  }
-  
-  # if more than 25 variables: split plots over several pages, 
-  # else: all plots on one page
-   if(ncol(df_num_order)>25){
-     
-     par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-     for(i in 1:25){
-       boxplot_fct(i)
-     }
-     
-     for(i in 26:ncol(df_num_order)){
-       if(isTRUE(round((i-1)/25)==(i-1)/25)){ 
-         cat("\n\n\\pagebreak\n")
-         par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-       }
-       boxplot_fct(i)
-     }
-  
-     } else { 
     
-      par(mfrow=c(ceiling(sqrt(length(df_num_order))),
-                  ceiling(sqrt(length(df_num_order)))),
-          mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-      
-      for(i in 1:ncol(df_num_order)){
-        boxplot_fct(i)
-      }
+  # Set graphical parameters 
+  if(ncol(df_num_order)>25){
+     par(mfrow=c(5,5), mar=c(1.5,1,2,1), oma=c(1,1,1,1))
+  } else { 
+    par(mfrow=c(ceiling(sqrt(length(df_num_order))), ceiling(sqrt(length(df_num_order)))), 
+        mar=c(1.5,1,2,1), oma= c(1,1,1,1))
     }
+  
+   for(i in 1:ncol(df_num_order)){
+      boxplot(df_num_order[,c(i)], col = "#2fa42d", main = colnames(df_num_order[i]),
+         xlab = paste(colnames(df_num_order[i])), xaxt = "n", horizontal = TRUE)
+   }
   
 }}}, error=function(e) message(e)
 )
@@ -575,35 +555,16 @@ if (exists("df_num")){
           add = TRUE, col="#396e9f", lwd=0.5,pch=1)
   }
   
-  
-  # If more than 25 variables: split plots over several pages
-   if(length(df_num_order)>25){
-     
-     # Set graphical parameters 
-     par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-     
-     for(i in 1:25) ecdf_plot(i)
-     
-     for(i in 26:ncol(df_num_order)){
-       if(isTRUE(round((i-1)/25)==(i-1)/25)){ 
-         cat("\n\n\\pagebreak\n")
-          # Set graphical parameters 
-         par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-       }
-       ecdf_plot(i)
-     }
-     
-  } else {
-    
-    # Set graphical parameters 
-    par(mfrow=c(ceiling(sqrt(length(df_num_order))),
-                ceiling(sqrt(length(df_num_order)))),
+  # Set graphical parameters 
+  if(ncol(df_num_order)>25){
+     par(mfrow=c(5,5), mar=c(1.5,1,2,1), oma=c(1,1,1,1))
+  } else { 
+    par(mfrow=c(ceiling(sqrt(length(df_num_order))), ceiling(sqrt(length(df_num_order)))), 
         mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-    
-    for(i in 1:ncol(df_num_order)) ecdf_plot(i)
+  }
   
-    }
-
+  for(i in 1:ncol(df_num_order)) ecdf_plot(i)
+  
 }}},  error=function(e) message(e)
 )
 ```
@@ -672,32 +633,16 @@ if (exists("df_num")){
            id=FALSE, cex=0.7, lwd=1, pch="-")
   }
   
-  # If more than 25 variables: split plots over several pages
-   if(length(df_num_order) > 25){
-     
-     # Set graphical parameters 
-     par(mfrow=c(5,5), mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-     
-     for(i in 1:25) qq_plot(i)
-    
-     for(i in 26:ncol(df_num_order)){
-       if (isTRUE(round((i-1)/25)==(i-1)/25)){ 
-         cat("\n\n\\pagebreak\n")
-         # Set graphical parameters 
-         par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-       }
-       qq_plot(i)
-     }
-     
-  } else {
-    
-    # Set graphical parameters 
-    par(mfrow=c(ceiling(sqrt(length(df_num_order))),
-                ceiling(sqrt(length(df_num_order)))),
+  
+  # Set graphical parameters 
+  if(ncol(df_num_order)>25){
+     par(mfrow=c(5,5), mar=c(1.5,1,2,1), oma=c(1,1,1,1))
+  } else { 
+    par(mfrow=c(ceiling(sqrt(length(df_num_order))), ceiling(sqrt(length(df_num_order)))), 
         mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-    
-    for(i in 1:ncol(df_num_order)) qq_plot(i)
   }
+  
+  for(i in 1:ncol(df_num_order)) qq_plot(i)
   
 }}},  error=function(e) message(e)
 )
@@ -726,27 +671,24 @@ if (exists("df_factor")){
   
   # Discrete variables
   # Descriptive statistics 
-  # Totals
+   ### Totals table
   miss <- sapply(df_factor, function(col) sum(is.na(col)))
-  complete <- sapply(df_factor, function(col) (1-(sum(is.na(col)) / dim(df)[1]))*100) 
+  complete <- sapply(df_factor, function(col) (1-(sum(is.na(col)) / nrow(df_factor)))*100) 
   complete <- round(complete,3)
-  miss_complete <- data.frame(miss, complete)
-  miss_complete$Variable <- rownames(miss_complete)
-  miss_complete$ntotal <- dim(df_factor)[1]
-  miss_complete$valid <- miss_complete$ntotal-miss_complete$miss
-  N_Unique <- data.frame(sapply(df_factor, function(col)
-    length(unique(col))))
-  N_Unique$Variable <- rownames(N_Unique)
+  totals <- data.frame(miss, complete)
+  totals$Variable <- rownames(totals)
+  totals$ntotal <- nrow(df_factor)
+  totals$valid <- totals$ntotal - totals$miss
+  totals$N_Unique <- sapply(df_factor, function(col) length(unique(col)))
+  totals <- totals[,c(3,4,1,5,2,6)]
+  colnames(totals) <- c("Variable", "N Obs", "N Missing", "N Valid", "% Complete","N Unique")
   
-  ## Merge statistics 
-  merge1<- merge(miss_complete, N_Unique, by="Variable")
-  merge2 <- merge1[,c(1,5,2,4,3,6)]
-  colnames(merge2) <- c("Variable", "N Valid", "N Missing", "N Obs", "% Complete","N Unique")
-  csize <- min(max(nchar(merge2$Variable)),25)
-  merge2$Variable <- substr(merge2$Variable,1,csize)
+  # Column size
+  csize <- min(max(nchar(totals$Variable)),25)
+  totals$Variable <- substr(totals$Variable,1,csize)
   
   ## Output table 
-  kable(merge2, digits=2, row.names = FALSE, longtable=T, booktabs=T, linesep = "") 
+  kable(totals, digits=2, row.names = FALSE, longtable=T, booktabs=T, linesep = "") 
   
 }}}, error=function(e) message(e)
 )
@@ -773,40 +715,40 @@ if (exists("df_factor")){
   # Descriptive statistics
   # Frequencies
   discrete <- function(i){
-    
-    # Calculate individual statistics
-    count_a <- table(df_factor[,i], useNA="always")
-    count <- as.data.frame(count_a)
-    perc <- as.data.frame(prop.table(count_a))
-    perc$Percent <- perc$Freq*100 
-    perc$Freq <- NULL
-    
-    # Merge to one dataframe
-    v1 <- merge(count, perc, by="Var1")
-    v1$Variable <- rep(colnames(df_factor)[i],dim(v1)[1])
-    v2 <- v1[,c(4,1,2,3)]
-    colnames(v2) <- c("Variable", "Category","Frequency", "Percent")
-    
-    if(length(is.na(v2$values))>0){
-      levels(v2$Values) <- c(levels(v2$Values),"Missing")
-      v2$Values[is.na(v2$Values)] <- "Missing"
-    }
-    
-    v2_order <- v2[order(-v2[,4],v2[,2]),]
-    min <- min(20, length(unique(df_factor[,i])))
-    
-    # Add category "All other values" in case of more than 20 categories
-    if(min==20){
-      v2_order$Category <- as.character(v2_order$Category)
-      v3 <- rbind(v2_order[1:20,],c(colnames(df_factor)[i], 
-                                   as.character("****All Other Values****"),
-                                  sum(v2_order$Frequency[-c(1:20)]), 
-                                  sum(v2_order$Percent[-c(1:20)])))
-    } else {
-      v3 <- v2_order[1:min,]
-    }
-    return(v3)
+  
+  # Calculate individual statistics
+  count <- table(df_factor[,i], useNA="always")
+  perc <- as.data.frame(prop.table(count))
+  perc$Percent <- perc$Freq*100
+  perc$Freq <- NULL
+  
+  # Merge to one dataframe
+  freq <- merge(count, perc, by="Var1")
+  freq$Variable <- rep(colnames(df_factor)[i],nrow(freq))
+  freq <- freq[,c(4,1,2,3)]
+  colnames(freq) <- c("Variable", "Category","Frequency", "Percent")
+  
+  # Rename missing category
+  if(length(is.na(freq$Category))>0){
+    levels(freq$Category) <- c(levels(freq$Category),"Missing")
+    freq$Category[is.na(freq$Category)] <- "Missing"
   }
+  
+  # Sort 
+  freq_order <- freq[order(-freq[,4],freq[,2]),]
+  
+  
+  # Add category "All other values" in case of more than 20 categories
+  min <- min(20, length(unique(df_factor[,i])))
+  if(min==20){
+    freq_order$Category <- as.character(freq_order$Category)
+    freq_order <- rbind(freq_order[1:20,],c(colnames(df_factor)[i], as.character("****All Other Values****"),
+                                  sum(freq_order$Frequency[-c(1:20)]), sum(freq_order$Percent[-c(1:20)])))
+  } else {
+    freq_order <- freq_order[1:min,]
+  }
+  return(freq_order)
+}
   
   # Merge individual variable frequency tables to one table
   cat_table <- discrete(1)
@@ -935,31 +877,16 @@ if (exists("df_factor")){
               cex.main=ceiling(sqrt(length(df_factor_order)))*
                 (-min(5,ceiling(sqrt(length(df_factor_order))))/12 + 0.5667))
     }
-    
-  # If more than 25 variables: split plots over several pages
-  if(ncol(df_factor_order)>25){
-    
-     par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-    
-     for(i in 1:25) plot_bar(i)
-     for(i in 26:length(df_factor_order)){
-       
-       # After 25 variables 
-       if(isTRUE(round((i-1)/25)==(i-1)/25)){ 
-         cat("\n\n\\pagebreak\n")
-         par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-       }
-       plot_bar(i)
-     }
-    
-  } else {
-    
-    par(mfrow=c(ceiling(sqrt(length(df_factor_order))),
-                ceiling(sqrt(length(df_factor_order)))),
+  
+  # Set graphical parameters 
+  if(ncol(df_factor)>25){
+     par(mfrow=c(5,5), mar=c(1.5,1,2,1), oma=c(1,1,1,1))
+  } else { 
+    par(mfrow=c(ceiling(sqrt(length(df_factor))), ceiling(sqrt(length(df_factor)))), 
         mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-    
-    for(i in 1:length(df_factor_order)) plot_bar(i)
-  }
+  }  
+      
+  for(i in 1:ncol(df_factor_order)) plot_bar(i)
   
 }}}, error=function(e) message(e)
 )

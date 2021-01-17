@@ -1,3 +1,4 @@
+
 # Define server logic 
 function(input, output, session) {
   
@@ -176,14 +177,14 @@ function(input, output, session) {
       session$reload()
     }
     
-    if (nrow(datainput()) > 1000){
-      showNotification("Error: Maximum 1000 rows allowed. ", duration=30)
+    if (nrow(datainput()) > 10000){
+      showNotification("Error: Maximum 10000 rows allowed. ", duration=30)
       Sys.sleep(5)
       session$reload()
     }
     
-    if (length(input$selection1$right) > 15 ){
-      showNotification("Error: Maximum 15 variables allowed.", duration=30)
+    if (length(input$selection1$right) > 100 ){
+      showNotification("Error: Maximum 100 variables allowed.", duration=30)
       Sys.sleep(5)
       session$reload()
     }

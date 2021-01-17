@@ -5,12 +5,13 @@ title: "Descriptive Statistics"
 ```{whites, eval=FALSE, echo = eval_rows}
 # Drop empty rows
 rowsums <- data.frame(sapply(df,is.na))
-rows_drop <- (which(rowSums(rowsums) == dim(df)[2]))
+rows_drop <- (which(rowSums(rowsums) == ncol(df)))
 df <- df[-rows_drop, ,drop=FALSE]
 ```
 
 ```{r, results="asis", eval=eval_code, echo=FALSE}
 eval_num <- FALSE
+eval_numcol <- FALSE
 if (exists("df_num")){
   if (ncol(df_num)>0){
      indices <- which(colnames(df_code) %in% colnames(df_num))
@@ -32,6 +33,7 @@ df_num <- df[ ,colnames_continuous, drop=FALSE]
 
 ```{r, results="asis", eval=eval_code, echo=FALSE}
 eval_cat <- FALSE
+eval_catcol <- FALSE
 if (exists("df_factor")){
   if (ncol(df_factor)>0){
      indices <- which(colnames(df_code) %in% colnames(df_factor))
@@ -40,6 +42,7 @@ if (exists("df_factor")){
      cat("`colnames_categorical = ")
      cat(paste0("c(", paste(indices, collapse=','), ")`"))
      eval_cat <- TRUE
+     eval_catcol <- (ncol(df_factor)>1)
   }
 }
 ```
@@ -137,11 +140,10 @@ for (i in 1:ncol(df_num_order)){
 ```{whites, eval=FALSE, echo = eval_numcol}
 # Continuous variables
 ## Graphics: Histograms for all variables
-par(mar=c(1.5,1,2,1.5), oma=c(1,1,1,1))
-k <- ceiling(dim(df_num)[2]/20)-1
+k <- ceiling(ncol(df_num)/20)-1
 for (i in 0:k){
   m <- 20*i+1
-  n <- min(20*(i+1),dim(df_num)[2])
+  n <- min(20*(i+1),ncol(df_num))
   multi.hist(df_num_order[,m:n], dcol=c("#396e9f","#396e9f"), 
              bcol= "#2fa42d", 
              dlty=c("dotted", "solid"), 
@@ -165,45 +167,23 @@ for (i in 1:ncol(df_num_order)){
 # Continuous variables
 ## Graphics: Box-Plot for all variables
 
-### Box-Plot function
-boxplot_fct <- function(i){
-  boxplot(df_num_order[,c(i)], col = "#2fa42d", 
-       main = colnames(df_num_order[i]),
-       xlab=paste(colnames(df_num_order[i])),xaxt="n",
-       horizontal = TRUE)
-}
+### Set graphical parameters 
+par(mfrow=c(ceiling(sqrt(length(df_num_order))), ceiling(sqrt(length(df_num_order)))), 
+    mar=c(1.5,1,2,1), oma=c(1,1,1,1))
 
-# If more than 25 variables: split plots over several pages
-if(ncol(df_num_order)>25){
- 
- par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
- for(i in 1:25){
-   boxplot_fct(i)
- }
- 
- for(i in 26:ncol(df_num_order)){
-   if(isTRUE(round((i-1)/25)==(i-1)/25)){ 
-     par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-   }
-   boxplot_fct(i)
- }
+### Plots    
+for(i in 1:ncol(df_num_order)){
+  boxplot(df_num_order[,c(i)], col = "#2fa42d", main = colnames(df_num_order[i]), 
+          xlab=paste(colnames(df_num_order[i])), xaxt="n", horizontal = TRUE)
+} 
 
- } else { 
-
-  par(mfrow=c(ceiling(sqrt(length(df_num_order))),
-              ceiling(sqrt(length(df_num_order)))),
-      mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-  
-  for(i in 1:ncol(df_num_order)) boxplot_fct(i)
-}
+### Restore graphical parameters 
+par(mfrow=c(1,1))
 ```
 
 ```{whites, eval=FALSE, echo = eval_num}
 # Continuous variables
 ## Graphics: ECDF Plots for each variable
-
-### Restore graphical parameters 
-par(pardefault)
 
 for (i in 1:length(df_num_order)){
   
@@ -233,9 +213,7 @@ for (i in 1:length(df_num_order)){
 # Continuous variables
 ## Graphics: ECDF Plots for all variables
 
-### Restore graphical parameters 
-par(pardefault)
-
+### ECDF function 
 ecdf_plot <- function(i){
 
   data <- as.data.frame(df_num_order[,c(i)])
@@ -258,34 +236,288 @@ ecdf_plot <- function(i){
 }
 
 
-# If more than 25 variables: split plots over several pages
-if(length(df_num_order)>25){
- 
-   # Set graphical parameters 
-   par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-   
-   for(i in 1:25) ecdf_plot(i)
-   
-   for(i in 26:ncol(df_num_order)){
-     if(isTRUE(round((i-1)/25)==(i-1)/25)){ 
-       par(mfrow=c(5,5),mar=c(1.5,1,2,1), oma= c(1,1,1,1))
-     }
-     ecdf_plot(i)
-   }
- 
-} else {
+### Set graphical parameters 
+par(mfrow=c(ceiling(sqrt(length(df_num_order))), ceiling(sqrt(length(df_num_order)))), 
+    mar=c(1.5,1,2,1), oma=c(1,1,1,1))
 
-  # Set graphical parameters 
-  par(mfrow=c(ceiling(sqrt(length(df_num_order))),
-              ceiling(sqrt(length(df_num_order)))),
-      mar=c(1.5,1,2,1), oma= c(1,1,1,1))
+### Plots  
+for(i in 1:ncol(df_num_order)) ecdf_plot(i)
+
+### Restore graphical parameters 
+par(mfrow=c(1,1))
+```
+
+```{whites, eval=FALSE, echo = eval_num}
+# Continuous variables
+## Graphics: QQ Plots for each variable
+
+### QQ Plots
+for (i in 1:ncol(df_num_order)){
+  data <- as.data.frame(df_num_order[,c(i)])
+  colnames(data) <-"variable"
+  qqPlot(data$variable, ylab = colnames(df_num_order)[c(i)], 
+         main = paste("Q-Q-Plot of", colnames(df_num_order[i])),
+         xlab = "Normal Quantiles", grid = FALSE,
+         col = "#2fa42d", col.lines = "#396e9f", envelope = FALSE, id=FALSE,
+         cex=0.7, pch=19)
+}
+```
+
+
+```{whites, eval=FALSE, echo = eval_numcol}
+# Continuous variables
+## Graphics: QQ Plots for all variables
+
+### QQ Plot function 
+qq_plot <- function(i){
+  data <- as.data.frame(df_num_order[,c(i)])
+  colnames(data) <-"variable"
+  qqPlot(data$variable, ylab = colnames(df_num_order)[c(i)], 
+         main = colnames(df_num_order[c(i)]),
+         col = "#2fa42d", col.lines = "#396e9f", envelope = FALSE, grid=FALSE,
+         id=FALSE, cex=0.7, lwd=1, pch="-")
+}
+
+### Set graphical parameters 
+par(mfrow=c(ceiling(sqrt(length(df_num_order))), ceiling(sqrt(length(df_num_order)))), 
+    mar=c(1.5,1,2,1), oma=c(1,1,1,1))
+
+### Plots  
+for(i in 1:ncol(df_num_order)) qq_plot(i)
+
+### Restore graphical parameters 
+par(mfrow=c(1,1))
+```
+
+
+```{whites, eval=FALSE, echo = eval_cat}
+# Categorical variables 
+## Descriptive statistics - Totals 
+
+### Totals statistics
+miss <- sapply(df_factor, function(col) sum(is.na(col)))
+complete <- sapply(df_factor, function(col) (1-(sum(is.na(col)) / nrow(df_factor)))*100) 
+complete <- round(complete,3)
+totals <- data.frame(miss, complete)
+totals$Variable <- rownames(totals)
+totals$ntotal <- nrow(df_factor)
+totals$valid <- totals$ntotal - totals$miss
+totals$N_Unique <- sapply(df_factor, function(col) length(unique(col)))
+totals <- totals[,c(3,4,1,5,2,6)]
+colnames(totals) <- c("Variable", "N Obs", "N Missing", "N Valid", "% Complete","N Unique")
+
+### Output table 
+kable(totals, digits=2, row.names = FALSE) 
+```
+
+```{whites, eval=FALSE, echo = eval_cat}
+# Categorical variables 
+## Descriptive statistics - Frequencies
+
+### Function stats per variable
+discrete <- function(i){
   
-  for(i in 1:ncol(df_num_order)) ecdf_plot(i)
+  # Calculate individual statistics
+  count <- table(df_factor[,i], useNA="always")
+  perc <- as.data.frame(prop.table(count))
+  perc$Percent <- perc$Freq*100
+  perc$Freq <- NULL
+  
+  # Merge to one dataframe
+  freq <- merge(count, perc, by="Var1")
+  freq$Variable <- rep(colnames(df_factor)[i],nrow(freq))
+  freq <- freq[,c(4,1,2,3)]
+  colnames(freq) <- c("Variable", "Category","Frequency", "Percent")
+  
+  # Rename missing category
+  if(length(is.na(freq$Category))>0){
+    levels(freq$Category) <- c(levels(freq$Category),"Missing")
+    freq$Category[is.na(freq$Category)] <- "Missing"
+  }
+  
+  # Sort 
+  freq_order <- freq[order(-freq[,4],freq[,2]),]
+  
+  # Add category "All other values" in case of more than 20 categories
+  min <- min(20, length(unique(df_factor[,i])))
+  if(min==20){
+    freq_order$Category <- as.character(freq_order$Category)
+    freq_order <- rbind(freq_order[1:20,], 
+                        c(colnames(df_factor)[i], as.character("****All Other Values****"),
+                          sum(freq_order$Frequency[-c(1:20)]), sum(freq_order$Percent[-c(1:20)])))
+  } else {
+    freq_order <- freq_order[1:min,]
+  }
+  return(freq_order)
+}
+
+### Loop over variables
+cat_table <- discrete(1)
+for (i in 1:ncol(df_factor)){
+  if (i>1){
+    cat_i <- discrete(i)
+    cat_table <- rbind(cat_table, cat_i)
+  }
+}
+
+### Sort by variable name 
+cat_table <- cat_table[order(cat_table$Variable),]
+cat_table$Percent <- round(as.numeric(cat_table$Percent),2)
+
+### Output table 
+kable(cat_table, digits=2, row.names = FALSE) 
+```
+
+
+```{whites, eval=FALSE, echo = eval_cat}
+# Categorical variables 
+## Descriptive graphics - Bar-Plot for each variable 
+
+### Sort by variable  
+df_factor_order <- df_factor[,order(colnames(df_factor)),drop=FALSE]  
+
+## Loop over variables 
+for (i in 1:ncol(df_factor)){
+  counts <- table(df_factor_order[i], useNA = "ifany")
+  names(counts)[is.na(names(counts))] <- "Missing"
+  names(counts)[names(counts)=="NA"] <- "Missing"
+   
+  if(any(nchar(names(counts), type = "chars")>=11) | dim(counts)>12){
+    
+     # Bar-Plot with suppressed category names if too many
+     if(length(names(counts))>40){
+        par(mar = c(6,6,4.1, 2.1), mgp = c(3, 1, 0))
+        barplot(counts, col = "#2fa42d", main = paste("Barplot of ", colnames(df_factor_order[i])), xaxt="n",
+                ylab = "Frequency", cex.names = 0.6, las=2, xlab= colnames(df_factor_order[i]),
+                ylim=range(pretty(c(0,counts))))
+        
+    
+      } else {
+         
+       par(mar = c(8, 8, 4.1, 2.1), mgp = c(6, 1, 0))
+       
+     # Bar-Plot with shortened category names if names are too long 
+       names(counts) <- substr(names(counts), 1, 15)
+       barplot(counts, col = "#2fa42d", main = paste("Barplot of ", colnames(df_factor_order[i])), ylab = "Frequency", 
+               cex.names = 0.65, xlab= colnames(df_factor_order[i]), las=2, ylim=range(pretty(c(0,counts))))
+     
+      }
+   
+  } else {
+     
+     # Bar-Plot with full-length names
+      par(mar = c(6,6, 4.1, 2.1), mgp = c(5, 1, 0))
+      barplot(counts, col = "#2fa42d", main = paste("Barplot of ", colnames(df_factor_order[i])), ylab = "Frequency", 
+              cex.names = 0.7,ylim=range(pretty(c(0,counts))), xlab= colnames(df_factor_order[i]))
+   }
+}
+```
+
+
+```{whites, eval=FALSE, echo = eval_catcol}
+# Categorical variables 
+## Descriptive graphics: Bar-Plots all variables
+
+### Function for Bar-Plot per variable 
+plot_bar <- function(i){
+  counts <- table(df_factor_order[i], useNA = "ifany")
+  names(counts)[is.na(names(counts))] <- "Missing"
+  names(counts)[names(counts)=="NA"] <- "Missing"
+  barplot(counts, col = "#2fa42d", main = colnames(df_factor_order[i]),
+          ylab = "Frequency",  xaxt="n",ylim=range(pretty(c(0,counts))),
+          cex.main=ceiling(sqrt(length(df_factor_order)))*
+            (-min(5,ceiling(sqrt(length(df_factor_order))))/12 + 0.5667))
+}
+
+### Set graphical parameters 
+par(mfrow=c(ceiling(sqrt(length(df_factor))), ceiling(sqrt(length(df_factor)))), 
+    mar=c(1.5,1,2,1), oma= c(1,1,1,1))
+  
+### Loop over variables 
+for(i in 1:ncol(df_factor_order)) plot_bar(i)
+
+### Restore graphical parameters 
+par(mfrow=c(1,1))
+```
+
+
+
+```{whites, eval=FALSE, echo = eval_cat}
+# Categorical variables 
+## Descriptive graphics: Pie-Plot for each variable 
+for (i in 1:ncol(df_factor_order)){
+  
+  # Create table with Frequencies
+  pie_table_unsorted <- as.data.frame(table(df_factor[,order(colnames(df_factor)),
+                                             drop=FALSE][,c(i)], useNA = "ifany")) 
+  pie_table_sorted <- pie_table_unsorted[order(pie_table_unsorted$Freq, decreasing=TRUE),]
+  colnames(pie_table_sorted) <- c("Category", "Frequency")
+  
+  # If more than 20 categories: summarize the smallest categories to one category
+  if(dim(pie_table_sorted)[1]>20){
+     pie_table_sorted$Category <- as.character(pie_table_sorted$Category)
+     pie_table_summarized <- rbind(pie_table_sorted[c(1:20),], c(as.character("All Other Values"), 
+                                   sum(pie_table_sorted$Frequency[-c(1:20)])))
+     pie_table_sorted<-pie_table_summarized
+   }
+  
+  # Pie Plot via ggplot
+   plot <- ggplot(pie_table_sorted, aes(x="",y=Frequency, fill=Category)) +
+    geom_bar(width=1,stat="identity", colour="black") +
+    coord_polar("y", start=0) +
+    theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_blank(),
+             panel.grid = element_blank(), axis.ticks=element_blank()) +
+    ggtitle(paste("Pie Chart of ", colnames(df_factor_order[i]))) +
+    theme(plot.title = element_text(hjust = 0.5, face="bold"), panel.background = element_blank())
+   print(plot)
 
 }
 ```
 
 
+```{whites, eval=FALSE, echo = eval_catcol}
+# Categorical variables 
+## Descriptive graphics: Pie-Plot for all variables
+
+### Initialize list of plots
+plots <- list()
+
+### Create Pie plot-function via ggplot
+ plot_pie <- function(pie_table_sorted){
+    plot <- ggplot(pie_table_sorted, aes(x="",y=Frequency, fill=Category)) +
+     ggtitle( substr(colnames(df_factor_order[i]),1,19)) +
+     theme(plot.title = element_text(hjust = 0.5)) +
+     geom_bar(width=1,stat="identity",  colour="black") +
+     coord_polar("y", start=0) +
+     theme(axis.title.x = element_blank(), axis.title.y = element_blank(), 
+           axis.ticks = element_blank(), panel.grid = element_blank(), axis.text = element_blank(), 
+           plot.title = element_text(size = 30/min(25,ceiling(sqrt(length(df_factor_order)))), face="bold"),
+           legend.position="none", panel.background = element_blank())
+    return(plot)
+    }
+
+### Loop over variables    
+for (i in 1:ncol(df_factor_order)){
+   
+  # Create table with Frequencies
+   pie_table_unsorted <- as.data.frame(table(df_factor[,order(colnames(df_factor)),
+                                             drop=FALSE][,c(i)],useNA = "ifany")) 
+   pie_table_sorted <- pie_table_unsorted[order(pie_table_unsorted$Freq, decreasing=TRUE),]
+   colnames(pie_table_sorted) <- c("Category", "Frequency")
+   
+   # If more than 20 categories: summarize the smallest categories to one category
+   if(dim(pie_table_sorted)[1]>20){
+     pie_table_sorted$Category<- as.character(pie_table_sorted$Category)
+     pie_table_summarized <-rbind(pie_table_sorted[c(1:20),], c(as.character("All Other Values"), 
+                                   sum(pie_table_sorted$Frequency[-c(1:20)])))
+     pie_table_sorted<-pie_table_summarized
+   }
+   plots[[i]] <- plot_pie(pie_table_sorted)
+}
+
+### Final plot call 
+grid.arrange(grobs=plots, ncol=ceiling(sqrt(length(df_factor_order))))
+```
 
 
 ```{r, results="asis", eval=eval_code}
