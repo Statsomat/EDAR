@@ -183,8 +183,8 @@ function(input, output, session) {
       session$reload()
     }
     
-    if (length(input$selection1$right) > 100 ){
-      showNotification("Error: Maximum 100 variables allowed.", duration=30)
+    if (length(input$selection1$right) > 1000 ){
+      showNotification("Error: Maximum 1000 variables allowed.", duration=30)
       Sys.sleep(5)
       session$reload()
     }

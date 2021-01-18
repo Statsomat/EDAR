@@ -155,7 +155,7 @@ cat("\\newline",fill=TRUE)
 # Missing columns
 if (exists("col_names_missing")){
   if (sum(col_names_missing) != 0L){
-    cat("\n\n\\small Number of columns that are dropped because they contain no values (all values are missing):", sum(col_names_missing), fill=TRUE)
+    cat("Number of columns that are dropped because they contain no values (all values are missing):", sum(col_names_missing), fill=TRUE)
     cat("\\newline",fill=TRUE) 
   } 
 }
@@ -219,7 +219,7 @@ if (exists("df_num")){
   if (dim(df_num)[2] != 0L){
     cat("# Results for Numerical Variables", fill=TRUE)
     cat("## Descriptive Statistics", fill=TRUE)
-    cat("Variables are sorted alphabetically.", fill=TRUE)
+    cat("Variables are sorted alphabetically. Missings are omitted in the stats. CV only for positive variables. ", fill=TRUE)
    
   } 
 }
@@ -249,14 +249,13 @@ if (exists("df_num")){
   
   ### Complete rate
   stats_new$complete <- sapply(df_num, function(col) (1-(sum(is.na(col)) / nrow(df_num)))*100)
-  stats_new$complete <- round(stats_new$complete,3)
   
   ### N Unique
-  stats_new$N_Unique <- sapply(df_num, function(col) length(unique(col)))
+  stats_new$N_Unique <- sapply(df_num, function(col) length(unique(na.omit(col))))
   
   ### CV
   stats_new$CV <- sapply(df_num, function(col) {
-    ifelse(any(col< 0,na.rm=TRUE), "-", round(sd(col,na.rm=TRUE) / mean(col,na.rm=TRUE),3))
+    ifelse(any(col< 0, na.rm=TRUE), "-", sd(col, na.rm=TRUE) / mean(col, na.rm=TRUE))
     })
   
   ### Reorder columns 
@@ -658,7 +657,7 @@ if (exists("df_factor")){
     cat("# Results for Discrete Variables", fill=TRUE)
     cat("## Descriptive Statistics", fill=TRUE)
     cat("### Totals", fill = TRUE)
-    cat("Variables are sorted alphabetically.", fill=TRUE)
+    cat("The table is sorted by the variable name. If any, N Unique contains the missing category.", fill=TRUE)
    } 
 }
 ```
@@ -681,6 +680,7 @@ if (exists("df_factor")){
   totals$valid <- totals$ntotal - totals$miss
   totals$N_Unique <- sapply(df_factor, function(col) length(unique(col)))
   totals <- totals[,c(3,4,1,5,2,6)]
+  totals <- totals[order(totals$Variable),]
   colnames(totals) <- c("Variable", "N Obs", "N Missing", "N Valid", "% Complete","N Unique")
   
   # Column size
@@ -701,7 +701,7 @@ if (exists("df_factor")){
 if (exists("df_factor")){
   if (dim(df_factor)[2] != 0L){
     cat("### Frequencies", fill = TRUE)
-    cat("The table is sorted by the variable name. For each variable, a maximum of 20 unique values are considered, sorted in decreasing order of their frequency.", fill=TRUE)
+    cat("The table is sorted by the variable name. For each variable, a maximum of 20 unique values are considered, sorted in decreasing order of their frequency. If any, missings are counted as a category. ", fill=TRUE)
    } 
 }
 ```
@@ -799,11 +799,12 @@ if (exists("df_factor")){
     counts <- table(df_factor_order[i], useNA = "ifany")
     names(counts)[is.na(names(counts))] <- "Missing"
     names(counts)[names(counts)=="NA"] <- "Missing"
+    counts <- counts[order(counts)]
      
-    if(any(nchar(names(counts), type = "chars")>=11) | dim(counts)>12){
+    if(any(nchar(names(counts), type = "chars") >= 11) || length(counts) > 12){
       
        # Barplot with suppressed category names if too many
-       if(length(names(counts))>40){
+       if(length(counts) > 40){
           par(mar = c(6,6,4.1, 2.1),mgp = c(3, 1, 0))
           barplot(counts, col = "#2fa42d", main = paste("Barplot of ", 
                                     colnames(df_factor_order[i])),xaxt="n",
@@ -868,14 +869,13 @@ if (exists("df_factor")){
     # Graphics: Barplots Summary
     # For each variable
 
-    plot_bar<-function(i){
+    plot_bar <- function(i){
       counts <- table(df_factor_order[i], useNA = "ifany")
       names(counts)[is.na(names(counts))] <- "Missing"
       names(counts)[names(counts)=="NA"] <- "Missing"
+      counts <- counts[order(counts)]
       barplot(counts, col = "#2fa42d", main = colnames(df_factor_order[i]),
-              ylab = "Frequency",  xaxt="n",ylim=range(pretty(c(0,counts))),
-              cex.main=ceiling(sqrt(length(df_factor_order)))*
-                (-min(5,ceiling(sqrt(length(df_factor_order))))/12 + 0.5667))
+              ylab = "Frequency",  xaxt="n", ylim=range(pretty(c(0,counts))))
     }
   
   # Set graphical parameters 
@@ -920,7 +920,7 @@ if (exists("df_factor")){
     pie_table_unsorted <- as.data.frame(table(df_factor[,order(colnames(df_factor)),
                                                drop=FALSE][,c(i)], useNA = "ifany")) 
     pie_table_sorted <- pie_table_unsorted[order(pie_table_unsorted$Freq, decreasing=TRUE),]
-    colnames(pie_table_sorted)<-c("Category", "Frequency")
+    colnames(pie_table_sorted) <- c("Category", "Frequency")
     
     # If more than 20 categories: summarize the smallest categories to one category
     if(dim(pie_table_sorted)[1]>20){

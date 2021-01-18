@@ -73,14 +73,13 @@ stats_new$miss <- sapply(df_num, function(col) sum(is.na(col)))
 
 ### Complete rate
 stats_new$complete <- sapply(df_num, function(col) (1-(sum(is.na(col)) / nrow(df_num)))*100)
-stats_new$complete <- round(stats_new$complete,3)
-
+  
 ### N Unique
-stats_new$N_Unique <- sapply(df_num, function(col) length(unique(col)))
+stats_new$N_Unique <- sapply(df_num, function(col) length(unique(na.omit(col))))
 
 ### CV
 stats_new$CV <- sapply(df_num, function(col) {
-  ifelse(any(col< 0,na.rm=TRUE), "-", round(sd(col,na.rm=TRUE) / mean(col,na.rm=TRUE),3))
+  ifelse(any(col< 0, na.rm=TRUE), "-", sd(col, na.rm=TRUE) / mean(col, na.rm=TRUE))
   })
 
 ### Reorder columns 
@@ -304,6 +303,7 @@ totals$ntotal <- nrow(df_factor)
 totals$valid <- totals$ntotal - totals$miss
 totals$N_Unique <- sapply(df_factor, function(col) length(unique(col)))
 totals <- totals[,c(3,4,1,5,2,6)]
+totals <- totals[order(totals$Variable),]
 colnames(totals) <- c("Variable", "N Obs", "N Missing", "N Valid", "% Complete","N Unique")
 
 ### Output table 
@@ -374,29 +374,28 @@ kable(cat_table, digits=2, row.names = FALSE)
 ## Descriptive graphics - Bar-Plot for each variable 
 
 ### Sort by variable  
-df_factor_order <- df_factor[,order(colnames(df_factor)),drop=FALSE]  
+df_factor_order <- df_factor[,order(colnames(df_factor)), drop=FALSE]  
 
 ## Loop over variables 
 for (i in 1:ncol(df_factor)){
   counts <- table(df_factor_order[i], useNA = "ifany")
   names(counts)[is.na(names(counts))] <- "Missing"
   names(counts)[names(counts)=="NA"] <- "Missing"
-   
-  if(any(nchar(names(counts), type = "chars")>=11) | dim(counts)>12){
+  counts <- counts[order(counts)] 
+  
+  if (any(nchar(names(counts), type = "chars") >= 11) || length(counts) > 12){
     
      # Bar-Plot with suppressed category names if too many
-     if(length(names(counts))>40){
+     if(length(counts)>40){
         par(mar = c(6,6,4.1, 2.1), mgp = c(3, 1, 0))
         barplot(counts, col = "#2fa42d", main = paste("Barplot of ", colnames(df_factor_order[i])), xaxt="n",
-                ylab = "Frequency", cex.names = 0.6, las=2, xlab= colnames(df_factor_order[i]),
-                ylim=range(pretty(c(0,counts))))
+                ylab = "Frequency", cex.names = 0.6, las = 2, xlab = colnames(df_factor_order[i]),
+                ylim = range(pretty(c(0,counts))))
         
     
       } else {
-         
+     # Bar-Plot with shortened category names if names are too long          
        par(mar = c(8, 8, 4.1, 2.1), mgp = c(6, 1, 0))
-       
-     # Bar-Plot with shortened category names if names are too long 
        names(counts) <- substr(names(counts), 1, 15)
        barplot(counts, col = "#2fa42d", main = paste("Barplot of ", colnames(df_factor_order[i])), ylab = "Frequency", 
                cex.names = 0.65, xlab= colnames(df_factor_order[i]), las=2, ylim=range(pretty(c(0,counts))))
@@ -408,7 +407,7 @@ for (i in 1:ncol(df_factor)){
      # Bar-Plot with full-length names
       par(mar = c(6,6, 4.1, 2.1), mgp = c(5, 1, 0))
       barplot(counts, col = "#2fa42d", main = paste("Barplot of ", colnames(df_factor_order[i])), ylab = "Frequency", 
-              cex.names = 0.7,ylim=range(pretty(c(0,counts))), xlab= colnames(df_factor_order[i]))
+              cex.names = 0.7, ylim=range(pretty(c(0,counts))), xlab= colnames(df_factor_order[i]))
    }
 }
 ```
@@ -423,10 +422,9 @@ plot_bar <- function(i){
   counts <- table(df_factor_order[i], useNA = "ifany")
   names(counts)[is.na(names(counts))] <- "Missing"
   names(counts)[names(counts)=="NA"] <- "Missing"
+  counts <- counts[order(counts)]
   barplot(counts, col = "#2fa42d", main = colnames(df_factor_order[i]),
-          ylab = "Frequency",  xaxt="n",ylim=range(pretty(c(0,counts))),
-          cex.main=ceiling(sqrt(length(df_factor_order)))*
-            (-min(5,ceiling(sqrt(length(df_factor_order))))/12 + 0.5667))
+          ylab = "Frequency",  xaxt="n", ylim=range(pretty(c(0,counts))))
 }
 
 ### Set graphical parameters 
