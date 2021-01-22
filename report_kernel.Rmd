@@ -45,7 +45,6 @@ library(psych)
 library(Hmisc)
 library(reshape2)
 library(ggplot2)
-library(shiny)
 library(gridExtra) # for grid.arrange
 library(PerformanceAnalytics) # for chart.ECDF
 library(car) # for qqPlot
@@ -195,7 +194,7 @@ check_reading <- function(col){
   return(sum(numeric)/sum(!is.na(col)))
 }
 
-df_char2 <- df[which(sapply(df2, is.character) == 1L)]
+df_char2 <- df2[which(sapply(df2, is.character) == 1L)]
 numeric_percent <- sapply(df_char2, function(col) check_reading(col))
 
 if (length(numeric_percent[(numeric_percent>0.9)]) != 0L){
@@ -255,7 +254,7 @@ if (exists("df_num")){
   
   ### CV
   stats_new$CV <- sapply(df_num, function(col) {
-    ifelse(any(col< 0, na.rm=TRUE), "-", sd(col, na.rm=TRUE) / mean(col, na.rm=TRUE))
+     ifelse(any(col< 0, na.rm=TRUE), "-", round((sd(col, na.rm=TRUE) / mean(col, na.rm=TRUE)),2))
     })
   
   ### Reorder columns 
@@ -809,8 +808,8 @@ if (exists("df_factor")){
           barplot(counts, col = "#2fa42d", main = paste("Barplot of ", 
                                     colnames(df_factor_order[i])),xaxt="n",
                   ylab = "Frequency", cex.names = 0.6, las=2, 
-                  xlab= colnames(df_factor_order[i]),
-                  ylim=range(pretty(c(0,counts))))
+                  xlab = colnames(df_factor_order[i]),
+                  ylim = range(pretty(c(0,counts))))
           
           cat("More than 40 categories. Category labels are not displayed.  ", fill=TRUE)
       
@@ -823,9 +822,9 @@ if (exists("df_factor")){
              barplot(counts, col = "#2fa42d", main = paste("Barplot of ",
                                               colnames(df_factor_order[i])),
                    ylab = "Frequency", cex.names = 0.65,
-                   xlab= colnames(df_factor_order[i]),
-                   las=2,
-                   ylim=range(pretty(c(0,counts))))
+                   xlab = colnames(df_factor_order[i]),
+                   las = 2,
+                   ylim = range(pretty(c(0,counts))))
        
              }
      
@@ -910,41 +909,59 @@ if (exists("df_factor")){
 tryCatch({
 if (exists("df_factor")){
   if (dim(df_factor)[2] != 0L){
+    
+# Function to create Frequency Table for Each Variable 
+freqtable <- function(col){
   
-    # Numerical variables
-    # Graphics: Pie Plot Large 
-    # For each variable
-  for (i in 1:ncol(df_factor_order)){
-    
-    # Create table with Frequencies
-    pie_table_unsorted <- as.data.frame(table(df_factor[,order(colnames(df_factor)),
-                                               drop=FALSE][,c(i)], useNA = "ifany")) 
-    pie_table_sorted <- pie_table_unsorted[order(pie_table_unsorted$Freq, decreasing=TRUE),]
-    colnames(pie_table_sorted) <- c("Category", "Frequency")
-    
-    # If more than 20 categories: summarize the smallest categories to one category
-    if(dim(pie_table_sorted)[1]>20){
-       pie_table_sorted$Category<- as.character(pie_table_sorted$Category)
-       pie_table_summarized <-rbind(pie_table_sorted[c(1:20),],
-                                   c(as.character("All Other Values"), 
-                                     sum(pie_table_sorted$Frequency[-c(1:20)])))
-       pie_table_sorted<-pie_table_summarized
-     }
-    
-    # Pie Plot via ggPlot
-     plot <- ggplot(pie_table_sorted, aes(x="",y=Frequency, fill=Category))+
-      geom_bar(width=1,stat="identity", colour="black")+
-      coord_polar("y", start=0)+
-      theme( axis.title.x = element_blank(), axis.title.y = element_blank(), 
-              axis.text.x = element_blank(),
-               panel.grid = element_blank(),
-              axis.ticks=element_blank())+
-      ggtitle(paste("Pie Chart of ", colnames(df_factor_order[i])))+
-      theme(plot.title = element_text(hjust = 0.5, face="bold"), 
-             panel.background = element_blank())
-     print(plot)
-    cat("\n\n\\pagebreak\n")
+  # Replace NA with "Missing"
+  col[is.na(col)] <- "Missing"
+  
+  # Create table with Frequencies
+  pie_table_unsorted <- as.data.frame(table(col)) 
+  pie_table_sorted <- pie_table_unsorted[order(pie_table_unsorted$Freq, decreasing=TRUE),]
+  colnames(pie_table_sorted) <- c("Category", "Frequency")
+  
+  # If more than 20 categories: summarize the smallest categories to one category
+  if (nrow(pie_table_sorted)>20){
+    pie_table_sorted$Category <- as.character(pie_table_sorted$Category)
+    pie_table_summarized <- rbind(pie_table_sorted[c(1:20),],
+                                  c(as.character("All Other Values"), 
+                                    sum(pie_table_sorted$Frequency[-c(1:20)])))
+    pie_table_sorted <- pie_table_summarized
   }
+  pie_table_sorted$RelFreq <- as.numeric(pie_table_sorted$Frequency) / length(col)
+  return(pie_table_sorted)
+}
+
+## Plot-Function
+plot_pie <- function(table, title, title_size, legend_pos){
+  plot <-
+    ggplot(table, aes(x = "", y = RelFreq, 
+                                 fill = reorder(Category, RelFreq))) +
+    guides(fill = guide_legend(title="", reverse = FALSE)) +
+    ggtitle(title) +
+    geom_col() +
+    geom_text(aes(label = scales::percent(RelFreq,accuracy = 0.01)), 
+              position = position_stack(vjust = 0.5), size = 2) +
+    coord_polar("y", start = 0) +
+    theme(axis.title.x = element_blank(),axis.title.y = element_blank(), 
+          axis.ticks = element_blank(), panel.grid = element_blank(), 
+          axis.text = element_blank(), legend.position = legend_pos,
+          panel.background = element_blank(), plot.title = title_size)
+  return(plot)
+}
+
+
+
+for(i in 1:ncol(df_factor_order)){
+  table <- freqtable(df_factor_order[,i])
+  title <- paste("Pie Chart of ", colnames(df_factor_order[i]))
+  title_size <- element_text(hjust = 0.5, face = "bold")
+  legend_pos <- "right"
+  print(plot_pie(table=table, title=title, title_size=title_size, legend_pos=legend_pos))
+  cat("\n\n\\pagebreak\n")
+}
+  
     
 }}}, error=function(e) message(e)
 )
@@ -966,58 +983,25 @@ tryCatch({
 if (exists("df_factor")){
   if (dim(df_factor)[2] >1){
   
-    # Discrete variables
-    # Graphics: Pie Plots Summary
-    # For each variable
+plots <- list()
+for (i in 1:ncol(df_factor_order)){
+  title <- substr(colnames(df_factor_order[i]), 1, 19)
+  title_size <- element_text(size = 30 / min(25, ceiling(sqrt(ncol(df_factor_order)))),
+                             face = "bold", hjust = 0.5)
+  legend_pos <- "none"
+  table <- freqtable(df_factor_order[,i])
+  plots[[i]] <- plot_pie(table=table, title=title, title_size=title_size, legend_pos=legend_pos)
+}
 
-  plots <- list()
-  
-  # Create Pie plot-function via ggplot
-   plot_pie <- function(pie_table_sorted){
-      plot <- ggplot(pie_table_sorted, aes(x="",y=Frequency, fill=Category))+
-       ggtitle( substr(colnames(df_factor_order[i]),1,19))+
-       theme(plot.title = element_text(hjust = 0.5))+
-       geom_bar(width=1,stat="identity",  colour="black")+
-       coord_polar("y", start=0)+
-       theme( axis.title.x = element_blank(), axis.title.y = element_blank(),
-             axis.ticks = element_blank(), panel.grid = element_blank(),
-             axis.text = element_blank(), 
-             plot.title = element_text(size = 30/min(25,ceiling(sqrt(length(df_factor_order)))),
-                                       face="bold"),
-             legend.position="none",
-             panel.background = element_blank())
-      return(plot)
-      }
-      
-  for (i in 1:length(df_factor_order)){
-     
-    # Create table with Frequencies
-     pie_table_unsorted <- as.data.frame(table(df_factor[,order(colnames(df_factor)),
-                                               drop=FALSE][,c(i)],useNA = "ifany")) 
-     pie_table_sorted <- pie_table_unsorted[order(pie_table_unsorted$Freq, decreasing=TRUE),]
-     colnames(pie_table_sorted) <- c("Category", "Frequency")
-     
-     # If more than 20 categories: summarize the smallest categories to one category
-     if(dim(pie_table_sorted)[1]>20){
-       pie_table_sorted$Category<- as.character(pie_table_sorted$Category)
-       pie_table_summarized <-rbind(pie_table_sorted[c(1:20),],
-                                   c(as.character("All Other Values"), 
-                                     sum(pie_table_sorted$Frequency[-c(1:20)])))
-       pie_table_sorted<-pie_table_summarized
-     }
-     plots[[i]] <- plot_pie(pie_table_sorted)
+if (ncol(df_factor_order)>25){
+  for(i in 1:ceiling(ncol(df_factor_order)/25)){
+    index <- seq((i-1)*25+1,min(i*25,ncol(df_factor_order)), by=1)
+    plots_2 <- plots[index]
+    grid.arrange(grobs=plots_2, ncol=5)
   }
-
-  # If more than 25 variables: split plots over several pages 
-  if(length(df_factor_order)>25){
-     for(i in 1:ceiling(length(df_factor_order)/25)){
-       index<- seq((i-1)*25+1,min(i*25,length(df_factor_order)),by=1)
-       plots_2<- plots[index]
-       grid.arrange(grobs=plots_2, ncol=5)
-     }
-  } else {
-   grid.arrange(grobs=plots, ncol=ceiling(sqrt(length(df_factor_order))))
-  }
+} else {
+  grid.arrange(grobs = plots, ncol = ceiling(sqrt(ncol(df_factor_order))))
+}
 
 }}},  error=function(e) message(e)
 )
