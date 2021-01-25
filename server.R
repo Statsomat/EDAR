@@ -177,14 +177,14 @@ function(input, output, session) {
       session$reload()
     }
     
-    if (nrow(datainput()) > 100000){
+    if (nrow(datainput()) > 1000){
       showNotification("Error: Maximum 1000 rows allowed. ", duration=30)
       Sys.sleep(5)
       session$reload()
     }
     
-    if (length(input$selection1$right) > 20 ){
-      showNotification("Error: Maximum 20 variables allowed.", duration=30)
+    if (length(input$selection1$right) > 10 ){
+      showNotification("Error: Maximum 10 columns allowed in an app call.", duration=30)
       Sys.sleep(5)
       session$reload()
     }

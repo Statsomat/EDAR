@@ -797,7 +797,6 @@ if (exists("df_factor")){
    for (i in 1:ncol(df_factor)){
     counts <- table(df_factor_order[i], useNA = "ifany")
     names(counts)[is.na(names(counts))] <- "Missing"
-    names(counts)[names(counts)=="NA"] <- "Missing"
     counts <- counts[order(counts)]
      
     if(any(nchar(names(counts), type = "chars") >= 11) || length(counts) > 12){

@@ -55,16 +55,16 @@ df_factor <- df[ ,colnames_categorical, drop=FALSE]
 ```{whites, eval=FALSE, echo = eval_num}
 
 # Continuous variables
-## Descriptive statistics table
+## Descriptive statistics
 
 ### Take over summary from psych package and add new stats 
 stats_new <- psych::describe(df_num)
 
-### Select variables to drop 
+### Drop some stats which we do not need  
 stats_new <- as.data.frame(stats_new)
 stats_new <- stats_new[c(-1,-6,-10,-13)]
 
-### Add new variables
+### Add new stats
 stats_new$Variable <- rownames(stats_new)
 stats_new$ntotal <- nrow(df_num)
 
@@ -92,13 +92,13 @@ colnames(stats_new) <- c("Variable", "N Obs", "N Missing", "N Valid", "% Complet
 ### Order by variable name
 stats_new <- stats_new[order(stats_new$Variable),]
 
-### Output Table 
+### Output
 knitr::kable(stats_new, digits=2, row.names = FALSE) 
 ```
 
 ```{whites, eval=FALSE, echo = eval_num}
 # Continuous variables
-## Graphics: Histograms One Per Page
+## Descriptive graphics: Histograms One Per Page
 
 ### Order by variable name 
 df_num_order <- df_num[,order(colnames(df_num)),drop=FALSE] 
@@ -130,7 +130,7 @@ single_hist <- function(x, main = "Histogram",
 
 
 ### Loop over variables
-for (i in 1:ncol(df_num_order)){
+for (i in 1:ncol(df_num)){
   single_hist(df_num_order[,i], main = paste("Histogram of ", colnames(df_num_order[i])))
 }
 ```
@@ -138,7 +138,7 @@ for (i in 1:ncol(df_num_order)){
 
 ```{whites, eval=FALSE, echo = eval_numcol}
 # Continuous variables
-## Graphics: Histograms Summary
+## Descriptive graphics: Histograms Summary
 k <- ceiling(ncol(df_num)/20)-1
 for (i in 0:k){
   m <- 20*i+1
@@ -153,8 +153,10 @@ for (i in 0:k){
 
 ```{whites, eval=FALSE, echo = eval_num}
 # Continuous variables
-## Graphics: Box-Plot One Per Page
-for (i in 1:ncol(df_num_order)){
+## Descriptive graphics: Box-Plot One Per Page
+
+### Loop over variables
+for (i in 1:ncol(df_num)){
   boxplot(df_num_order[,c(i)], col = "#2fa42d", 
        main = paste("Boxplot of",colnames(df_num_order[i])),
        xlab=paste(colnames(df_num_order[i])), horizontal = TRUE)
@@ -164,14 +166,14 @@ for (i in 1:ncol(df_num_order)){
 
 ```{whites, eval=FALSE, echo = eval_numcol}
 # Continuous variables
-## Graphics: Box-Plots Summary
+## Descriptive graphics: Box-Plots Summary
 
 ### Set graphical parameters 
 par(mfrow=c(ceiling(sqrt(length(df_num_order))), ceiling(sqrt(length(df_num_order)))), 
     mar=c(1.5,1,2,1), oma=c(1,1,1,1))
 
-### Plots    
-for(i in 1:ncol(df_num_order)){
+### Loop over variables   
+for(i in 1:ncol(df_num)){
   boxplot(df_num_order[,c(i)], col = "#2fa42d", main = colnames(df_num_order[i]), 
           xlab=paste(colnames(df_num_order[i])), xaxt="n", horizontal = TRUE)
 } 
@@ -182,9 +184,10 @@ par(mfrow=c(1,1))
 
 ```{whites, eval=FALSE, echo = eval_num}
 # Continuous variables
-## Graphics: ECDF Plots One Per Page
+## Descriptive graphics: ECDF Plots One Per Page
 
-for (i in 1:length(df_num_order)){
+### Loop over variables  
+for (i in 1:ncol(df_num)){
   
   data <- as.data.frame(df_num_order[,c(i)])
   colnames(data) <- "variable"
@@ -239,8 +242,8 @@ ecdf_plot <- function(i){
 par(mfrow=c(ceiling(sqrt(length(df_num_order))), ceiling(sqrt(length(df_num_order)))), 
     mar=c(1.5,1,2,1), oma=c(1,1,1,1))
 
-### Plots  
-for(i in 1:ncol(df_num_order)) ecdf_plot(i)
+### Loop over variables  
+for(i in 1:ncol(df_num)) ecdf_plot(i)
 
 ### Restore graphical parameters 
 par(mfrow=c(1,1))
@@ -250,8 +253,8 @@ par(mfrow=c(1,1))
 # Continuous variables
 ## Graphics: QQ Plots One Per Page
 
-### QQ Plots
-for (i in 1:ncol(df_num_order)){
+### Loop over variables 
+for (i in 1:ncol(df_num)){
   data <- as.data.frame(df_num_order[,c(i)])
   colnames(data) <-"variable"
   qqPlot(data$variable, ylab = colnames(df_num_order)[c(i)], 
@@ -281,8 +284,8 @@ qq_plot <- function(i){
 par(mfrow=c(ceiling(sqrt(length(df_num_order))), ceiling(sqrt(length(df_num_order)))), 
     mar=c(1.5,1,2,1), oma=c(1,1,1,1))
 
-### Plots  
-for(i in 1:ncol(df_num_order)) qq_plot(i)
+### Loop over variables   
+for(i in 1:ncol(df_num)) qq_plot(i)
 
 ### Restore graphical parameters 
 par(mfrow=c(1,1))
@@ -306,7 +309,7 @@ totals <- totals[,c(3,4,1,5,2,6)]
 totals <- totals[order(totals$Variable),]
 colnames(totals) <- c("Variable", "N Obs", "N Missing", "N Valid", "% Complete","N Unique")
 
-### Output table 
+### Output 
 kable(totals, digits=2, row.names = FALSE) 
 ```
 
@@ -364,7 +367,7 @@ for (i in 1:ncol(df_factor)){
 cat_table <- cat_table[order(cat_table$Variable),]
 cat_table$Percent <- round(as.numeric(cat_table$Percent),2)
 
-### Output table 
+### Output  
 kable(cat_table, digits=2, row.names = FALSE) 
 ```
 
@@ -373,14 +376,13 @@ kable(cat_table, digits=2, row.names = FALSE)
 # Categorical variables 
 ## Descriptive graphics: Bar-Plots One Per Page
 
-### Sort by variable  
+### Data frame sorted by column name 
 df_factor_order <- df_factor[,order(colnames(df_factor)), drop=FALSE]  
 
-## Loop over variables 
+### Loop over variables 
 for (i in 1:ncol(df_factor)){
   counts <- table(df_factor_order[i], useNA = "ifany")
   names(counts)[is.na(names(counts))] <- "Missing"
-  names(counts)[names(counts)=="NA"] <- "Missing"
   counts <- counts[order(counts)] 
   
   # Plot by case (e.g. category names length)
@@ -432,7 +434,7 @@ par(mfrow=c(ceiling(sqrt(length(df_factor))), ceiling(sqrt(length(df_factor)))),
     mar=c(1.5,1,2,1), oma= c(1,1,1,1))
   
 ### Loop over variables 
-for(i in 1:ncol(df_factor_order)) plot_bar(i)
+for(i in 1:ncol(df_factor)) plot_bar(i)
 
 ### Restore graphical parameters 
 par(mfrow=c(1,1))
@@ -486,7 +488,7 @@ plot_pie <- function(table, title, title_size, legend_pos){
 }
 
 ### Loop over variables
-for(i in 1:ncol(df_factor_order)){
+for(i in 1:ncol(df_factor)){
   table <- freqtable(df_factor_order[,i])
   title <- paste("Pie Chart of ", colnames(df_factor_order[i]))
   title_size <- element_text(hjust = 0.5, face = "bold")
@@ -501,11 +503,11 @@ for(i in 1:ncol(df_factor_order)){
 # Categorical variables 
 ## Descriptive graphics: Pie-Plots Summary
 
-### Save plots in a list 
+### Save variable plots in a list
 plots <- list()
-for (i in 1:ncol(df_factor_order)){
+for (i in 1:ncol(df_factor)){
   title <- substr(colnames(df_factor_order[i]), 1, 19)
-  title_size <- element_text(size = 30 / min(25, ceiling(sqrt(ncol(df_factor_order)))),
+  title_size <- element_text(size = 30 / min(25, ceiling(sqrt(ncol(df_factor)))),
                              face = "bold", hjust = 0.5)
   legend_pos <- "none"
   table <- freqtable(df_factor_order[,i])
