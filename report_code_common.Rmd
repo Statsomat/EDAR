@@ -277,7 +277,7 @@ qq_plot <- function(i){
   qqPlot(data$variable, ylab = colnames(df_num_order)[c(i)], 
          main = colnames(df_num_order[c(i)]),
          col = "#2fa42d", col.lines = "#396e9f", envelope = FALSE, grid=FALSE,
-         id=FALSE, cex=0.7, lwd=1, pch="-")
+         id=FALSE, cex=1, lwd=1)
 }
 
 ### Set graphical parameters 
