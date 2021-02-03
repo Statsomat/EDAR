@@ -582,7 +582,7 @@ if (exists("df_num")){
 ```
 
 
-```{r, results = 'asis', dev="cairo_pdf", fig.width = 9, fig.height=5}
+```{r, results = 'asis', dev="cairo_pdf", fig.width = 8}
 tryCatch({
 if (exists("df_num")){
   if (dim(df_num)[2] != 0L){
@@ -598,8 +598,9 @@ if (exists("df_num")){
            xlab = "Normal Quantiles", grid = FALSE,
            col = "#2fa42d", col.lines = "#396e9f", envelope = FALSE, id=FALSE,
            cex=0.7, pch=19)
-  }
     cat("\n\n\\pagebreak\n")
+  }
+    
 }}}, error=function(e) message(e)
 )
 ```
@@ -786,7 +787,7 @@ if (exists("df_factor")){
 ```
 
 
-```{r, results = 'asis', dev="cairo_pdf", fig.width = 9, fig.height=5}
+```{r, results = 'asis', dev="cairo_pdf", fig.width = 8}
 tryCatch({
 if (exists("df_factor")){
   if (dim(df_factor)[2] != 0L){
@@ -838,6 +839,8 @@ if (exists("df_factor")){
                 cex.names = 0.7,ylim=range(pretty(c(0,counts))),
                 xlab= colnames(df_factor_order[i]))
      }
+    
+     cat("\n\n\\pagebreak\n")
   }
   
 }}}, error=function(e) message(e)
