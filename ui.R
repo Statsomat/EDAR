@@ -76,7 +76,7 @@ shinyUI(fluidPage(
      background-color: #396e9f;
      padding: 20px;
      margin-bottom: 0px;"),
-  h3("Experimental Beta Version", 
+  h5("Experimental Beta Version", 
      style = "font-family: 'Source Sans Pro';
      color: #fff; text-align: center;
      background-color: #2fa42d;
@@ -88,15 +88,8 @@ shinyUI(fluidPage(
   
   fluidRow( 
               
-      
-      column(6, 
-             
-             wellPanel(style = "background: #fff;", includeHTML("www/Description.html")),
-             wellPanel(style = "background: #fff;", includeHTML("www/Instructions.html"))
-
-      ),
                  
-      column(6,  
+      column(5, offset = 1,  
              
              
              wellPanel(style = "background: #adc7de;", 
@@ -141,18 +134,8 @@ shinyUI(fluidPage(
                       
                       uiOutput("selection1")
                     
-            )
-            
-      )
-                  
-  )
-  ,
-  
-  
-  fluidRow( 
-    
-    
-    column(12, 
+            ),
+
            
            wellPanel(style = "background: #ff9900", align="center", 
                      
@@ -175,16 +158,9 @@ shinyUI(fluidPage(
                                    ")
                      
                      
-           )
+           ), 
            
-           )
-  ),
-  
-  
-  fluidRow( 
-    
-    
-    column(12, 
+
            
            wellPanel(style = "background: #ff9900", align="center", 
                      
@@ -203,43 +179,24 @@ shinyUI(fluidPage(
                      
                      
            )
-    )
-  ),
-  
+    ), # end column 
 
-  fluidRow( 
     
-    
-    column(6, 
-
-           wellPanel(style = "background: #fff;", includeHTML("www/Secure.html")), 
-           wellPanel(style = "background: #fff;", includeHTML("www/Other.html"))
-          
-    
-    ),
-
-    column(6, 
+    column(5, 
+           
+          wellPanel(style = "background: #fff;", includeHTML("www/Description.html")),
+          wellPanel(style = "background: #fff;", includeHTML("www/Instructions.html")),
+          wellPanel(style = "background: #fff;", includeHTML("www/Secure.html")), 
+          wellPanel(style = "background: #fff;", includeHTML("www/OpenSource.html")), 
+          wellPanel(style = "background: #fff;", includeHTML("www/Other.html")), 
+          wellPanel(style = "background: #fff;", includeHTML("www/Also.html")),
+          wellPanel(style = "background: #fff;", includeHTML("www/Contact.html"))
        
-        wellPanel(style = "background: #fff;", includeHTML("www/Also.html")),
-        wellPanel(style = "background: #fff;", includeHTML("www/OpenSource.html"))
-       
-    )
-
-),
-
-fluidRow( 
+    ) # column 
+  ), # fluidrow
   
-  column(12, 
-         
-         wellPanel(style = "background: #fff;", includeHTML("www/Contact.html"))
-         
-  )
+  includeHTML("www/Footer.html"),
   
-),
-
+  hr()
   
- includeHTML("www/Footer.html"),
- 
- hr()
- 
 ))

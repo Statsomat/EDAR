@@ -474,7 +474,7 @@ plot_pie <- function(table, title, title_size, legend_pos){
   plot <-
     ggplot(table, aes(x = "", y = RelFreq, 
                                  fill = reorder(Category, RelFreq))) +
-    guides(fill = guide_legend(title="", reverse = FALSE)) +
+    guides(fill = guide_legend(title="", reverse = FALSE, direction = "horizontal")) +
     ggtitle(title) +
     geom_col() +
     geom_text(aes(label = scales::percent(RelFreq,accuracy = 0.01)),  

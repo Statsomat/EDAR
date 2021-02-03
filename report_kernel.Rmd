@@ -120,6 +120,7 @@ eval <- TRUE
 # Chunk with first page of basic information
 
 cat("\n# Basic Information", fill=TRUE)
+cat("\\small ", fill=TRUE)
 cat("Automatic statistics for the file:", fill=TRUE)
 dataname <- params$filename[1]
 kable(dataname, col.names = "File", linesep = '', longtable=T) 
@@ -165,7 +166,7 @@ if (exists("df_cont")){
   if (ncol(df_cont)>0){
     cat(ncol(df_cont),fill=TRUE)
     knitr::kable(cols_continuous, col.names = "Variables considered continuous", linesep = '', longtable=T) %>%
-      kable_styling(position = "center", full_width = FALSE, latex_options = c("HOLD_position","repeat_header"))
+      kable_styling(font_size = 8, position = "center", full_width = FALSE, latex_options = c("HOLD_position","repeat_header"))
   } else {
     cat("0", fill=TRUE)
     cat("\\newline",fill=TRUE) 
@@ -178,7 +179,7 @@ if (exists("df_cat")){
   if (ncol(df_cat)>0){
     cat(ncol(df_cat),fill=TRUE)
     knitr::kable(colnames(df_cat), col.names = "Variables considered categorical", linesep = '', longtable=T) %>%
-      kable_styling(position = "center", full_width = FALSE, latex_options = c("HOLD_position","repeat_header"))
+      kable_styling(font_size = 8, position = "center", full_width = FALSE, latex_options = c("HOLD_position","repeat_header"))
   } else {
     cat("0", fill=TRUE)
     cat("\\newline",fill=TRUE) 
@@ -273,7 +274,7 @@ if (exists("df_num")){
 
   ### Output table 
   knitr::kable(stats_new, digits=2, row.names = FALSE, longtable=T, booktabs=T, linesep = "") %>%
-    kable_styling(font_size = 7,   latex_options = c("scale_down", "repeat_header")) 
+    kable_styling(font_size = 8,   latex_options = c("scale_down", "repeat_header")) 
   
 }}}, error=function(e) message(e)
 )
@@ -478,7 +479,7 @@ if (exists("df_num")){
 }
 ```
 
-```{r, results = 'asis', dev="cairo_pdf", fig.width = 10, fig.height=5, eval=eval}
+```{r, results = 'asis', dev="cairo_pdf", fig.width = 9, fig.height=5, eval=eval}
 tryCatch({
 if (exists("df_num")){
   if (dim(df_num)[2] > 0L){
@@ -581,7 +582,7 @@ if (exists("df_num")){
 ```
 
 
-```{r, results = 'asis', dev="cairo_pdf", fig.width = 10, fig.height=6}
+```{r, results = 'asis', dev="cairo_pdf", fig.width = 9, fig.height=5}
 tryCatch({
 if (exists("df_num")){
   if (dim(df_num)[2] != 0L){
@@ -785,7 +786,7 @@ if (exists("df_factor")){
 ```
 
 
-```{r, results = 'asis', dev="cairo_pdf", fig.width = 10, fig.height=6}
+```{r, results = 'asis', dev="cairo_pdf", fig.width = 9, fig.height=5}
 tryCatch({
 if (exists("df_factor")){
   if (dim(df_factor)[2] != 0L){
@@ -937,7 +938,7 @@ plot_pie <- function(table, title, title_size, legend_pos){
   plot <-
     ggplot(table, aes(x = "", y = RelFreq, 
                                  fill = reorder(Category, RelFreq))) +
-    guides(fill = guide_legend(title="", reverse = FALSE)) +
+    guides(fill = guide_legend(title="", reverse = FALSE, direction = "horizontal")) +
     ggtitle(title) +
     geom_col() +
     geom_text(aes(label = scales::percent(RelFreq,accuracy = 0.01)), 
