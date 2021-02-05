@@ -151,6 +151,32 @@ function(input, output, session) {
   })
   
   
+  # Row limits 
+  observe({
+    
+    req(input$file, datainput())
+    
+    removeModal()
+    
+    
+    if (nrow(datainput()) > 1000){
+      showNotification("Error: For more than 1000 rows contact support@statsomat.com. ", duration=30)
+      Sys.sleep(5)
+      session$close()
+    }
+    
+    if (nrow(datainput()) < 3){
+      showNotification("Error: Minimum 3 observations required. ", duration=30)
+      Sys.sleep(5)
+      session$close()
+    }
+    
+    
+  })
+  
+  
+  
+  
   # Select Variables
   output$selection1 <- renderUI({
     
@@ -174,19 +200,14 @@ function(input, output, session) {
     if (length(unique(input$selection1$left)) != length(input$selection1$left)){
       showNotification("Error in selection: The columns names of the dataset are not distinct. Please rename columns and restart the app.", duration=30)
       Sys.sleep(5)
-      session$reload()
+      session$close()
     }
     
-    if (nrow(datainput()) > 1000){
-      showNotification("Error: Maximum 1000 rows allowed. ", duration=30)
-      Sys.sleep(5)
-      session$reload()
-    }
     
     if (length(input$selection1$right) > 10 ){
       showNotification("Error: Maximum 10 columns allowed in an app call.", duration=30)
       Sys.sleep(5)
-      session$reload()
+      session$close()
     }
     
   })
