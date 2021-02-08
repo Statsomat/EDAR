@@ -200,7 +200,6 @@ numeric_percent <- sapply(df_char2, function(col) check_reading(col))
 
 if (length(numeric_percent[(numeric_percent>0.9)]) != 0L){
   cat("**Warning: More than 90% of the values of these columns could be treated as numeric. Nevertheless, because of some values or the selected decimal character, the columns must be treated as discrete. Are all the values plausible? Please check the data once more before uploading! Column(s):**", names(numeric_percent[(numeric_percent>0.9)]), fill=TRUE)
-   cat("\\newline",fill=TRUE) 
 }
 
 ```
@@ -241,7 +240,7 @@ if (exists("df_num")){
   stats_new <- stats_new[c(-1,-6,-10,-13)]
   
   ### Add new variables
-  stats_new$Variable <- rownames(stats_new)
+  stats_new$Variable <- colnames(df_num)
   stats_new$ntotal <- nrow(df_num)
   
   ### Missings
@@ -812,6 +811,7 @@ if (exists("df_factor")){
                   xlab = colnames(df_factor_order[i]),
                   ylim = range(pretty(c(0,counts))))
           
+          cat("\\newline", fill=TRUE) 
           cat("More than 40 categories. Category labels are not displayed.  ", fill=TRUE)
       
            } else {
@@ -938,10 +938,16 @@ freqtable <- function(col){
 
 ## Plot-Function
 plot_pie <- function(table, title, title_size, legend_pos){
+  # Direction of the legend for large category names 
+  if (max(nchar(as.character(table[,1])))>15){ 
+    legend = "vertical"
+  } else {
+    legend = "horizontal"
+  }
   plot <-
     ggplot(table, aes(x = "", y = RelFreq, 
                                  fill = reorder(Category, RelFreq))) +
-    guides(fill = guide_legend(title="", reverse = FALSE, direction = "horizontal")) +
+    guides(fill = guide_legend(title="", reverse = FALSE, direction = legend)) +
     ggtitle(title) +
     geom_col() +
     geom_text(aes(label = scales::percent(RelFreq,accuracy = 0.01)), 

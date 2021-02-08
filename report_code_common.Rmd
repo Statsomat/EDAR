@@ -65,7 +65,7 @@ stats_new <- as.data.frame(stats_new)
 stats_new <- stats_new[c(-1,-6,-10,-13)]
 
 ### Add new stats
-stats_new$Variable <- rownames(stats_new)
+stats_new$Variable <- colnames(df_num)
 stats_new$ntotal <- nrow(df_num)
 
 ### Missings
@@ -93,7 +93,7 @@ colnames(stats_new) <- c("Variable", "N Obs", "N Missing", "N Valid", "% Complet
 stats_new <- stats_new[order(stats_new$Variable),]
 
 ### Output
-knitr::kable(stats_new, digits=2, row.names = FALSE) 
+knitr::kable(stats_new, digits=2, row.names = FALSE, format="simple") 
 ```
 
 ```{whites, eval=FALSE, echo = eval_num}
@@ -310,7 +310,7 @@ totals <- totals[order(totals$Variable),]
 colnames(totals) <- c("Variable", "N Obs", "N Missing", "N Valid", "% Complete","N Unique")
 
 ### Output 
-kable(totals, digits=2, row.names = FALSE) 
+kable(totals, digits=2, row.names = FALSE, format="simple") 
 ```
 
 ```{whites, eval=FALSE, echo = eval_cat}
@@ -368,7 +368,7 @@ cat_table <- cat_table[order(cat_table$Variable),]
 cat_table$Percent <- round(as.numeric(cat_table$Percent),2)
 
 ### Output  
-kable(cat_table, digits=2, row.names = FALSE) 
+kable(cat_table, digits=2, row.names = FALSE, format="simple") 
 ```
 
 
@@ -471,10 +471,16 @@ freqtable <- function(col){
 
 ### Plot function
 plot_pie <- function(table, title, title_size, legend_pos){
+  # Direction of the legend 
+  if (max(nchar(as.character(table[,1])))>15){ 
+    legend = "vertical"
+  } else {
+    legend = "horizontal"
+  }
   plot <-
     ggplot(table, aes(x = "", y = RelFreq, 
                                  fill = reorder(Category, RelFreq))) +
-    guides(fill = guide_legend(title="", reverse = FALSE, direction = "horizontal")) +
+    guides(fill = guide_legend(title="", reverse = FALSE, direction = legend)) +
     ggtitle(title) +
     geom_col() +
     geom_text(aes(label = scales::percent(RelFreq,accuracy = 0.01)),  
