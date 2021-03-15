@@ -159,7 +159,7 @@ function(input, output, session) {
     removeModal()
     
     
-    if (nrow(datainput()) > 1000){
+    if (nrow(datainput()) > 5000){
       showNotification("Maximum sample size exceeded. For more contact: support@statsomat.com", duration=30)
       Sys.sleep(5)
       session$close()
@@ -204,7 +204,7 @@ function(input, output, session) {
     }
     
     
-    if (length(input$selection1$right) > 10 ){
+    if (length(input$selection1$right) > 25 ){
       showNotification("Maximum number of columns exceeded. For more contact: support@statsomat.com", duration=30)
       Sys.sleep(5)
       session$close()
