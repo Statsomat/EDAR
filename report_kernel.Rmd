@@ -1,5 +1,5 @@
 ---
-title: "Descriptive Statistics and Graphics"
+title: "Exploratory Data Analysis (EDA)"
 ---
 
 ```{r setup, include=FALSE}
@@ -9,6 +9,14 @@ knitr::opts_chunk$set(echo = FALSE, comment='', message = FALSE, error = TRUE, w
 
 ```{r}
 library(knitr) # kable
+library(psych)
+library(Hmisc)
+library(reshape2)
+library(ggplot2)
+library(gridExtra) # for grid.arrange
+library(PerformanceAnalytics) # for chart.ECDF
+library(car) # for qqPlot
+library(kableExtra)
 
 # Get data
 df <- params$data
@@ -16,6 +24,7 @@ df_code <- df
 
 # Initialize further chunks
 eval0 <- FALSE
+eval <- FALSE
 
 tryCatch({
   
@@ -254,7 +263,7 @@ if (exists("df_num")){
   
   ### CV
   stats_new$CV <- sapply(df_num, function(col) {
-     ifelse(any(col< 0, na.rm=TRUE), "-", round((sd(col, na.rm=TRUE) / mean(col, na.rm=TRUE)),2))
+     ifelse(any(col <= 0, na.rm=TRUE), "-", round((sd(col, na.rm=TRUE) / mean(col, na.rm=TRUE)),2))
     })
   
   ### Reorder columns 
@@ -572,10 +581,10 @@ if (exists("df_num")){
 ```{r, results="asis", eval=eval}
 if (exists("df_num")){
   if (dim(df_num)[2]==1){
-    cat("### Q-Q-Plots", fill=TRUE)
+    cat("### QQ-Plots", fill=TRUE)
   } else if (dim(df_num)[2]>1){
-    cat("### Q-Q-Plots", fill=TRUE)
-    cat("One Q-Q-Plot per page for each variable. Variables are sorted alphabetically.  ", fill=TRUE)
+    cat("### QQ-Plots", fill=TRUE)
+    cat("One QQ-Plot per page for each variable. Variables are sorted alphabetically.  ", fill=TRUE)
   }
 }
 ```
@@ -585,18 +594,31 @@ if (exists("df_num")){
 tryCatch({
 if (exists("df_num")){
   if (dim(df_num)[2] != 0L){
+  
+  # Define function for the QQ-Plot  
+  qq_plot <- function(i, main, xlab, ylab){
+    var <- df_num_order[,i]
+    qqplot(x = qnorm(ppoints(var), mean = mean(var, na.rm = TRUE), 
+                     sd = sd(var, na.rm = TRUE)),
+         y = var,
+         xlim = c(min(var, na.rm = TRUE), max(var, na.rm = TRUE)), 
+         ylim = c(min(var, na.rm = TRUE), max(var, na.rm = TRUE)), 
+         main = main,
+         xlab = xlab,
+         ylab = ylab,
+         col = "#2fa42d", cex=0.7, pch=19
+         )
+    abline(a = 0, b = 1, col = "#396e9f", lwd = 2)
+    grid()
+  }
     
   # Numerical variables
-  # Graphics: Q-Q-Plot Large 
-  # For each variable
-  for (i in 1:ncol(df_num_order)){
-    data <- as.data.frame(df_num_order[,c(i)])
-    colnames(data) <-"variable"
-    qqPlot(data$variable, ylab = colnames(df_num_order)[c(i)], 
-           main = paste("Q-Q-Plot of", colnames(df_num_order[i])),
-           xlab = "Normal Quantiles", grid = FALSE,
-           col = "#2fa42d", col.lines = "#396e9f", envelope = FALSE, id=FALSE,
-           cex=0.7, pch=19)
+  # Graphics: QQ-Plot Large 
+  for (i in 1:ncol(df_num)){
+    qq_plot(i, main = paste("QQ-Plot of", colnames(df_num_order[i])),
+            xlab = "Theoretical Quantiles, Normal Distribution", 
+            ylab = paste("Sample Quantiles for ", colnames(df_num_order[i]))
+            )
     cat("\n\n\\pagebreak\n")
   }
     
@@ -609,8 +631,9 @@ if (exists("df_num")){
 # Title
 if (exists("df_num")){
   if (dim(df_num)[2] >1){
-  cat("### Q-Q-Plots Summary", fill=TRUE)
-  cat("Multiple Q-Q-Plots of variables in one figure. Variables are sorted alphabetically.  ", fill=TRUE)
+  cat("### QQ-Plots Summary", fill=TRUE)
+  cat("QQ-Plots of variables in one figure. Theoretical Quantiles of the Normal Distribution.
+  ", fill=TRUE)
   } 
 } 
 ```
@@ -622,17 +645,7 @@ if (exists("df_num")){
   if (dim(df_num)[2] >1){
   
   # Numerical variables
-  # Graphics: Q-Q-Plots Summary
-  qq_plot <- function(i){
-    data <- as.data.frame(df_num_order[,c(i)])
-    colnames(data) <-"variable"
-    qqPlot(data$variable, ylab = colnames(df_num_order)[c(i)], 
-           main = colnames(df_num_order[c(i)]),
-           col = "#2fa42d", col.lines = "#396e9f", envelope = FALSE, grid=FALSE,
-           id=FALSE, cex=1, lwd=1)
-  }
-  
-  
+  # Graphics: QQ-Plots Summary
   # Set graphical parameters 
   if(ncol(df_num_order)>25){
      par(mfrow=c(5,5), mar=c(1.5,1,2,1), oma=c(1,1,1,1))
@@ -641,7 +654,7 @@ if (exists("df_num")){
         mar=c(1.5,1,2,1), oma= c(1,1,1,1))
   }
   
-  for(i in 1:ncol(df_num_order)) qq_plot(i)
+  for(i in 1:ncol(df_num)) qq_plot(i, colnames(df_num_order[i]), "", "")
   
 }}},  error=function(e) message(e)
 )

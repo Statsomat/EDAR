@@ -1,5 +1,5 @@
 ---
-title: "Descriptive Statistics"
+title: "Exploratory Data Analysis (EDA)"
 author: "Statsomat.com"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -35,7 +35,7 @@ if (exists("eval")) eval_code <- eval else eval_code <- FALSE
 
 \pagebreak
  
-```{r, results="asis", eval=eval, echo=FALSE}
+```{r, results="asis", eval=eval_code, echo=FALSE}
 cat("\n# R Packages", fill=TRUE)
 cat("To run the code you need to install following R packages: ", fill=TRUE)
 cat("\\newline ")
@@ -95,6 +95,9 @@ suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(PerformanceAnalytics))
 suppressPackageStartupMessages(library(gridExtra))
 suppressPackageStartupMessages(library(car))
+
+# Make a copy of current graphical settings
+opar <- par(no.readonly = TRUE)     
 ```
 
 

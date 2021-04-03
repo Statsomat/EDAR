@@ -70,13 +70,13 @@ shinyUI(fluidPage(
   
   tags$div(a(img(src='Logo.jpg', width=200), href="https://www.statsomat.com", target="_blank")),
   
-  h1("Descriptive Statistics", 
+  h1("Exploratory Data Analysis (EDA)", 
      style = "font-family: 'Helvetica';
      color: #fff; text-align: center;
      background-color: #396e9f;
      padding: 20px;
      margin-bottom: 0px;"),
-  h5("Experimental Beta Version", 
+  h5("With R", 
      style = "font-family: 'Helvetica';
      color: #fff; text-align: center;
      background-color: #2fa42d;
@@ -188,8 +188,6 @@ shinyUI(fluidPage(
           wellPanel(style = "background: #fff;", includeHTML("www/Instructions.html")),
           wellPanel(style = "background: #fff;", includeHTML("www/Secure.html")), 
           wellPanel(style = "background: #fff;", includeHTML("www/OpenSource.html")), 
-          wellPanel(style = "background: #fff;", includeHTML("www/Other.html")), 
-          wellPanel(style = "background: #fff;", includeHTML("www/Also.html")),
           wellPanel(style = "background: #fff;", includeHTML("www/Contact.html"))
        
     ), # column 
