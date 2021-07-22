@@ -9,7 +9,6 @@ output:
     toc_depth: 2
 bibliography: ["references.bib"]
 classoption: landscape
-fontsize: 9pt
 params:
   data: NA
   filename: NA
