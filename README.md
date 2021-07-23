@@ -1,3 +1,7 @@
 # EDAR
 
-A Shiny app for automated Exploratory Data Analysis with R. Follow the Instructions on the webpage of the app https://statsomat.shinyapps.io/Descriptive_statistics/ to generate a PDF report. Optionally, the code to reproduce numerical and graphical results is included in the generated PDF report.
+A Shiny app for automated Exploratory Data Analysis with R. 
+
+Check it out directly here: https://statsomat.shinyapps.io/Descriptive_statistics/. Follow the instructions to generate a PDF report containing numerical outputs, garphics and code. 
+
+Check also the Statsomat portal https://Statsomat.com for more apps. 
